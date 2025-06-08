@@ -1,12 +1,12 @@
 package com.example.product.model;
 
 public enum Category {
-    HEALTH,
-    MAKE_UP,
-    HYGIENE,
-    SUPPLEMENTS,
-    SKIN_CARE,
-    HAIR_CARE,
-    PERFUMES,
-    MENS_CARE
+    ZDRAVLJE,       // HEALTH
+    SMINKA,         // MAKE_UP
+    HIGIJENA,       // HYGIENE
+    SUPLEMENTI,     // SUPPLEMENTS
+    NJEGA_KOZE,     // SKIN_CARE
+    NJEGA_KOSE,     // HAIR_CARE
+    PARFEMI,        // PERFUMES
+    MUSKA_NJEGA     // MENS_CARE
 }
