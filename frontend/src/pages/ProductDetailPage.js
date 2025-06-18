@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import styled from 'styled-components';
 import axios from 'axios';
+import { useCart } from '../context/CartContext';
+import { toast } from 'react-toastify';
 
 const DetailContainer = styled.div`
     background-color: var(--white-color);
@@ -92,11 +94,35 @@ const ProductInfo = styled.div`
     }
 `;
 
+// Novi styled component za odabir količine
+const QuantitySelector = styled.div`
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    label {
+        font-weight: 500;
+        font-size: 1.1em;
+    }
+
+    input {
+        width: 80px;
+        padding: 8px;
+        border: 1px solid var(--border-color);
+        border-radius: 5px;
+        text-align: center;
+        font-size: 1em;
+    }
+`;
+
 function ProductDetailPage() {
     const { id } = useParams();
     const [product, setProduct] = useState(null);
+    const [quantity, setQuantity] = useState(1); // Novo stanje za odabranu količinu
     const [error, setError] = useState('');
     const API_GATEWAY_URL = 'http://localhost:8085/api';
+    const { addToCart } = useCart(); // Dohvati addToCart funkciju
 
     useEffect(() => {
         setError(''); // Očisti greške pri svakoj promjeni ID-a
@@ -123,7 +149,17 @@ function ProductDetailPage() {
                 }
                 setProduct(null);
             });
-    }, [id]); // Ovisnost o `id` osigurava da se useEffect ponovo pokrene kada se id promijeni
+    }, [id]);
+
+    const handleAddToCart = async () => {
+        if (!product) return; // Ne dozvoli dodavanje ako proizvod nije učitan
+        const success = await addToCart(product.id, quantity);
+        if (success) {
+            toast.success(`${quantity}x ${product.name} dodano u košaricu!`);
+        } else {
+            toast.error('Nije uspjelo dodavanje u košaricu. Provjerite prijavu.');
+        }
+    };
 
     if (error) {
         return (
@@ -161,11 +197,26 @@ function ProductDetailPage() {
                 <ProductInfo>
                     <h2>{product.name}</h2>
                     <p><strong>Brend:</strong> {product.brand}</p>
-                    <p><strong>Kategorija:</strong> {product.category}</p> {/* Prikazat će naziv enuma (npr. NJEGA_KOZE) */}
+                    <p><strong>Kategorija:</strong> {product.category}</p>
                     <p><strong>Opis:</strong> {product.description}</p>
                     <p><strong>Dostupna količina:</strong> {product.quantity}</p>
                     <p className="price">{product.price} KM</p>
-                    <button>Dodaj u korpu</button>
+
+                    {/* Dodaj input za količinu */}
+                    <QuantitySelector>
+                        <label htmlFor="quantity">Količina:</label>
+                        <input
+                            type="number"
+                            id="quantity"
+                            min="1"
+                            max={product.quantity}
+                            value={quantity}
+                            onChange={(e) => setQuantity(Number(e.target.value))}
+                        />
+                    </QuantitySelector>
+
+                    {/* Ažurirano dugme */}
+                    <button onClick={handleAddToCart}>Dodaj u korpu</button>
                 </ProductInfo>
             </DetailContainer>
         </div>

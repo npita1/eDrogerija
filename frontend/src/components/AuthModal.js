@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'; // Dodan useEffect
 import styled from 'styled-components';
-import { FaTimes } from 'react-icons/fa'; // Ikona za zatvaranje modala
-import { useAuth } from '../context/AuthContext'; // Uvezi useAuth hook
+import { FaTimes } from 'react-icons/fa';
+import { useAuth } from '../context/AuthContext';
+import { toast } from 'react-toastify';
 
 const ModalOverlay = styled.div`
   position: fixed;
@@ -13,7 +14,7 @@ const ModalOverlay = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000; // Prikazuje se iznad svega
+  z-index: 1000;
 `;
 
 const ModalContent = styled.div`
@@ -24,6 +25,12 @@ const ModalContent = styled.div`
   max-width: 90%;
   box-shadow: 0px 5px 15px var(--shadow-color);
   position: relative;
+  max-height: 90vh; /* Ograniči visinu modala */
+  overflow-y: auto; /* Omogući skrolanje ako je sadržaj predug */
+
+  @media (max-width: 480px) {
+    padding: 20px;
+  }
 `;
 
 const CloseButton = styled.button`
@@ -35,7 +42,7 @@ const CloseButton = styled.button`
   font-size: 1.5em;
   color: var(--text-color);
   cursor: pointer;
-  z-index: 10; // Osiguraj da je iznad ostalog sadržaja
+  z-index: 10;
 `;
 
 const FormTitle = styled.h2`
@@ -51,6 +58,7 @@ const FormField = styled.div`
     display: block;
     margin-bottom: 5px;
     font-weight: 500;
+    color: var(--text-color);
   }
 
   input {
@@ -59,6 +67,7 @@ const FormField = styled.div`
     border: 1px solid var(--border-color);
     border-radius: 5px;
     font-size: 1em;
+    box-sizing: border-box;
   }
 `;
 
@@ -67,14 +76,16 @@ const SubmitButton = styled.button`
   padding: 12px;
   background-color: var(--primary-color);
   color: var(--white-color);
+  border: none;
   border-radius: 5px;
   font-size: 1.1em;
   font-weight: 600;
   margin-top: 20px;
-  transition: background-color 0.3s ease;
+  cursor: pointer;
+  transition: background-color 0.3s ease, filter 0.3s ease;
 
   &:hover {
-    background-color: filter: brightness(0.9); // Alternative to darken for JS
+    filter: brightness(0.9);
   }
 `;
 
@@ -82,6 +93,7 @@ const SwitchModeText = styled.p`
   text-align: center;
   margin-top: 20px;
   font-size: 0.9em;
+  color: var(--text-color);
 
   span {
     color: var(--secondary-color);
@@ -94,38 +106,80 @@ const SwitchModeText = styled.p`
 `;
 
 const ErrorMessage = styled.p`
-  color: #dc3545; // Crvena boja
+  color: #dc3545;
   font-size: 0.9em;
   text-align: center;
   margin-top: 10px;
   margin-bottom: 10px;
 `;
 
-
-function AuthModal({ onClose }) {
-  const [isLoginMode, setIsLoginMode] = useState(true);
-  const [username, setUsername] = useState(''); // Koristimo username
-  const [email, setEmail] = useState('');      // Email samo za registraciju
+function AuthModal({ onClose, initialMode = 'login' }) {
+  const [isLoginMode, setIsLoginMode] = useState(initialMode === 'login');
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login, register } = useAuth(); // Dohvati funkcije login i register iz konteksta
-  const [error, setError] = useState(''); // Za prikaz grešaka
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [address, setAddress] = useState('');
 
-  const handleFormSubmit = async (e) => { // Dodaj async
+  const { login, register } = useAuth();
+  const [error, setError] = useState('');
+
+  const resetFormFields = () => {
+    setUsername('');
+    setEmail('');
+    setPassword('');
+    setFirstName('');
+    setLastName('');
+    setPhoneNumber('');
+    setAddress('');
+    setError('');
+  };
+
+  useEffect(() => {
+    setIsLoginMode(initialMode === 'login');
+    resetFormFields();
+  }, [initialMode]);
+
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
-    setError(''); // Očisti prethodne greške
+    setError('');
 
     let success;
-    if (isLoginMode) {
-      success = await login(username, password); // Pozovi login sa username i password
-    } else {
-      success = await register(username, email, password); // Pozovi register
-    }
+    try {
+      if (isLoginMode) {
+        success = await login(username, password);
+        if (success) {
+          toast.success('Uspješna prijava!');
+        } else {
+          setError('Neispravno korisničko ime ili lozinka.');
+          toast.error('Prijava neuspješna!');
+        }
+      } else { // Register Mode
+        if (!username || !email || !password || !firstName || !lastName || !phoneNumber || !address) {
+            setError('Molimo popunite sva obavezna polja za registraciju.');
+            return;
+        }
 
-    if (success) {
-      onClose(); // Zatvori modal samo ako je uspješno
-    } else {
-      setError('Neuspješna prijava/registracija. Provjerite podatke.'); 
-      // Možeš dodati specifičnije poruke na osnovu error.response.data ako ih backend vraća
+        success = await register(username, email, password, firstName, lastName, phoneNumber, address);
+        if (success) {
+          toast.success('Registracija uspješna! Prijavljeni ste.');
+        } else {
+          setError('Registracija neuspješna. Korisničko ime ili email možda već postoje.');
+          toast.error('Registracija neuspješna!');
+        }
+      }
+
+      if (success) {
+        onClose();
+        resetFormFields();
+      }
+
+    } catch (err) {
+      console.error('Authentication error:', err.response ? err.response.data : err.message);
+      setError('Došlo je do greške. Molimo pokušajte ponovo.');
+      toast.error('Greška pri komunikaciji sa serverom!');
     }
   };
 
@@ -140,41 +194,90 @@ function AuthModal({ onClose }) {
 
         <form onSubmit={handleFormSubmit}>
           <FormField>
-            <label htmlFor="username">Korisničko ime</label>
+            <label htmlFor="username">Korisničko ime:</label>
             <input
               type="text"
               id="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
+              placeholder="Unesite korisničko ime"
             />
           </FormField>
           
-          {!isLoginMode && ( // Email je potreban samo za registraciju
-            <FormField>
-              <label htmlFor="email">Email</label>
-              <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </FormField>
+          {!isLoginMode && (
+            <>
+              <FormField>
+                <label htmlFor="email">Email adresa:</label>
+                <input
+                  type="email"
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  placeholder="Unesite email"
+                />
+              </FormField>
+              <FormField>
+                <label htmlFor="firstName">Ime:</label>
+                <input
+                  type="text"
+                  id="firstName"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  required
+                  placeholder="Unesite ime"
+                />
+              </FormField>
+              <FormField>
+                <label htmlFor="lastName">Prezime:</label>
+                <input
+                  type="text"
+                  id="lastName"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  required
+                  placeholder="Unesite prezime"
+                />
+              </FormField>
+              <FormField>
+                <label htmlFor="phoneNumber">Broj telefona:</label>
+                <input
+                  type="tel"
+                  id="phoneNumber"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  required
+                  placeholder="Unesite broj telefona"
+                />
+              </FormField>
+              <FormField>
+                <label htmlFor="address">Adresa:</label>
+                <input
+                  type="text"
+                  id="address"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  required
+                  placeholder="Unesite adresu"
+                />
+              </FormField>
+            </>
           )}
 
           <FormField>
-            <label htmlFor="password">Lozinka</label>
+            <label htmlFor="password">Lozinka:</label>
             <input
               type="password"
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              placeholder="Unesite lozinku"
             />
           </FormField>
 
-          {error && <ErrorMessage>{error}</ErrorMessage>} {/* Prikaz greške */}
+          {error && <ErrorMessage>{error}</ErrorMessage>}
 
           <SubmitButton type="submit">
             {isLoginMode ? 'Prijavi se' : 'Registruj se'}
@@ -184,11 +287,11 @@ function AuthModal({ onClose }) {
         <SwitchModeText>
           {isLoginMode ? (
             <>
-              Nemate račun? <span onClick={() => { setIsLoginMode(false); setError(''); }}>Registrujte se</span>
+              Nemate račun? <span onClick={() => { setIsLoginMode(false); resetFormFields(); }}>Registrujte se</span>
             </>
           ) : (
             <>
-              Već imate račun? <span onClick={() => { setIsLoginMode(true); setError(''); }}>Prijavite se</span>
+              Već imate račun? <span onClick={() => { setIsLoginMode(true); resetFormFields(); }}>Prijavite se</span>
             </>
           )}
         </SwitchModeText>
