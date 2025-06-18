@@ -15,7 +15,7 @@ import jakarta.persistence.EntityNotFoundException;
 import com.example.identity.model.User; // Pretpostavljam da je ovo tvoja User klasa koja implementira UserDetails
 
 @RestController
-@RequestMapping("/api/users") // Nova bazna putanja za korisničke detalje
+@RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class IdentityController {
 
