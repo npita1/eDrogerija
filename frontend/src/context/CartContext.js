@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { useAuth } from './AuthContext'; // Potrebno za JWT token
-import { toast } from 'react-toastify'; // Za notifikacije
+import { useAuth } from './AuthContext';
+import { toast } from 'react-toastify';
+import axios from 'axios';
 
 const CartContext = createContext();
 
@@ -10,183 +11,137 @@ export const useCart = () => {
 
 export const CartProvider = ({ children }) => {
     const [cartItems, setCartItems] = useState([]);
-    const { user, getToken } = useAuth(); // Dohvati user i getToken funkciju iz AuthContext-a
-    const [isLoading, setIsLoading] = useState(false); // Novo: za indikator učitavanja
-    const [error, setError] = useState(null); // Novo: za greške
+    const { user, token } = useAuth();
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState(null);
 
-    // TODO: PRILAGODI OVAJ URL AKO JE DRUGI URL ZA BACKEND API
-    const API_BASE_URL = 'http://localhost:8080/api'; 
+    const API_BASE_URL = 'http://localhost:8085/api';
 
-    // Funkcija za dohvaćanje JWT tokena i postavljanje headera
-    const getAuthHeaders = useCallback(async () => {
-        const token = await getToken(); // Koristi getToken iz AuthContext-a
-        if (!token) {
-            console.error("No authentication token available.");
-            return {};
-        }
+    const getAuthHeaders = useCallback(() => {
         return {
-            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
         };
-    }, [getToken]); // Zavisnost od getToken
+    }, []);
 
-    // Funkcija za dohvaćanje korpe sa backenda
     const fetchCart = useCallback(async () => {
         if (!user) {
-            setCartItems([]); // Ako korisnik nije prijavljen, isprazni korpu na frontendu
+            setCartItems([]);
             return;
         }
 
         setIsLoading(true);
         setError(null);
         try {
-            const headers = await getAuthHeaders();
-            const response = await fetch(`${API_BASE_URL}/cart`, {
-                method: 'GET',
-                headers: headers,
-            });
-
-            if (!response.ok) {
-                if (response.status === 401 || response.status === 403) {
-                    // Ako je neautorizovan, možda je token istekao, isprazni korpu
-                    setCartItems([]);
-                    toast.error("Sesija je istekla. Molimo prijavite se ponovo.");
-                    return;
-                }
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to fetch cart.');
-            }
-
-            const data = await response.json();
-            // Backend vraća 'items' kao listu CartItemResponse
-            // Frontend očekuje 'id', 'name', 'price', 'quantity', 'imageUrl' na nivou stavke
-            const mappedCartItems = data.items.map(item => ({
-                id: item.productId, // Koristimo productId kao id za frontend logiku korpe
+            const response = await axios.get(`${API_BASE_URL}/cart`);
+            
+            const mappedCartItems = response.data.items.map(item => ({
+                id: item.productId,
                 name: item.productName,
-                price: parseFloat(item.price), // Parsiraj BigDecimal u number
+                price: parseFloat(item.price),
                 quantity: item.quantity,
                 imageUrl: item.imageUrl
             }));
             setCartItems(mappedCartItems);
         } catch (err) {
             console.error("Error fetching cart:", err);
-            setError(err.message);
-            setCartItems([]); // U slučaju greške, isprazni korpu
-            toast.error("Greška pri učitavanju košarice: " + err.message);
+            if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+                toast.error("Sesija je istekla ili nemate dozvolu. Molimo prijavite se ponovo.");
+                setCartItems([]);
+            } else {
+                const errorMessage = err.response?.data?.message || err.message || 'Greška pri učitavanju košarice.';
+                setError(errorMessage);
+                toast.error("Greška pri učitavanju košarice: " + errorMessage);
+                setCartItems([]);
+            }
         } finally {
             setIsLoading(false);
         }
-    }, [user, getAuthHeaders]); // Zavisnost od user i getAuthHeaders
+    }, [user, API_BASE_URL]);
 
-    // Dohvati korpu kada se user promijeni ili kada se komponenta montira
     useEffect(() => {
         fetchCart();
-    }, [user, fetchCart]);
+    }, [user, fetchCart, token]);
 
-    // Funkcija za dodavanje proizvoda u korpu
-    const addToCart = async (productToAdd) => {
+    // IZMJENA OVDJE: Dodan 'quantity' parametar i vraćanje true/false
+    const addToCart = async (productToAdd, quantity = 1) => { 
         if (!user) {
             toast.info('Molimo prijavite se da biste dodali proizvod u košaricu.');
-            return;
+            return false; // Vrati false jer korisnik nije prijavljen
         }
         setIsLoading(true);
         setError(null);
         try {
-            const headers = await getAuthHeaders();
-            const response = await fetch(`${API_BASE_URL}/cart/add`, {
-                method: 'POST',
-                headers: headers,
-                body: JSON.stringify({
-                    productId: productToAdd.id,
-                    quantity: 1, // Uvijek dodajemo jedan po jedan kada kliknemo "Add to cart"
-                }),
+            const response = await axios.post(`${API_BASE_URL}/cart/add`, {
+                productId: productToAdd.id,
+                quantity: quantity, // Koristi proslijeđenu quantity
             });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to add product to cart.');
+            if (response.status === 200 || response.status === 201) {
+                await fetchCart(); // Osvježi stanje korpe
+                toast.success(`${productToAdd.name} (x${quantity}) dodan u košaricu!`); // Toast poruka ovdje
+                return true; // Uspjeh
+            } else {
+                throw new Error(response.data.message || 'Neuspješno dodavanje proizvoda u košaricu.');
             }
-
-            // Nakon uspješnog dodavanja, ponovo dohvati korpu da sinhronizuješ frontend sa backendom
-            await fetchCart();
-            toast.success(`${productToAdd.name} dodan u košaricu!`);
         } catch (err) {
             console.error("Error adding to cart:", err);
-            setError(err.message);
-            toast.error("Greška pri dodavanju u košaricu: " + err.message);
+            const errorMessage = err.response?.data?.message || err.message || 'Greška pri dodavanju u košaricu.';
+            setError(errorMessage);
+            toast.error("Greška pri dodavanju u košaricu: " + errorMessage); // Toast poruka za grešku ovdje
+            return false; // Neuspjeh
         } finally {
             setIsLoading(false);
         }
     };
 
-    // Funkcija za uklanjanje proizvoda iz korpe
     const removeFromCart = async (productId) => {
-        if (!user) return; // Ne dozvoli akciju ako user nije prijavljen
+        if (!user) return;
         setIsLoading(true);
         setError(null);
         try {
-            const headers = await getAuthHeaders();
-            const response = await fetch(`${API_BASE_URL}/cart/remove/${productId}`, {
-                method: 'DELETE',
-                headers: headers,
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to remove product from cart.');
-            }
-
+            await axios.delete(`${API_BASE_URL}/cart/remove/${productId}`);
             await fetchCart();
             toast.info("Proizvod uklonjen iz košarice.");
         } catch (err) {
             console.error("Error removing from cart:", err);
-            setError(err.message);
-            toast.error("Greška pri uklanjanju iz košarice: " + err.message);
+            const errorMessage = err.response?.data?.message || err.message || 'Greška pri uklanjanju iz košarice.';
+            setError(errorMessage);
+            toast.error("Greška pri uklanjanju iz košarice: " + errorMessage);
         } finally {
             setIsLoading(false);
         }
     };
 
-    // Funkcija za povećanje količine
     const increaseQuantity = async (productId) => {
-        if (!user) return; // Ne dozvoli akciju ako user nije prijavljen
+        if (!user) return;
         const currentItem = cartItems.find(item => item.id === productId);
         if (!currentItem) return;
+
+        const newQuantity = currentItem.quantity + 1;
 
         setIsLoading(true);
         setError(null);
         try {
-            const headers = await getAuthHeaders();
-            const response = await fetch(`${API_BASE_URL}/cart/update/${productId}?quantity=${currentItem.quantity + 1}`, {
-                method: 'PUT',
-                headers: headers,
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to increase quantity.');
-            }
-
+            await axios.put(`${API_BASE_URL}/cart/update/${productId}?quantity=${newQuantity}`);
             await fetchCart();
             toast.success("Količina ažurirana!");
         } catch (err) {
             console.error("Error increasing quantity:", err);
-            setError(err.message);
-            toast.error("Greška pri povećanju količine: " + err.message);
+            const errorMessage = err.response?.data?.message || err.message || 'Greška pri povećanju količine.';
+            setError(errorMessage);
+            toast.error("Greška pri povećanju količine: " + errorMessage);
         } finally {
             setIsLoading(false);
         }
     };
 
-    // Funkcija za smanjenje količine
     const decreaseQuantity = async (productId) => {
-        if (!user) return; // Ne dozvoli akciju ako user nije prijavljen
+        if (!user) return;
         const currentItem = cartItems.find(item => item.id === productId);
         if (!currentItem) return;
 
-        const newQuantity = Math.max(0, currentItem.quantity - 1); // Količina ne može ići ispod 0
+        const newQuantity = Math.max(0, currentItem.quantity - 1);
         
-        // Ako količina padne na 0, ukloni proizvod iz korpe
         if (newQuantity === 0) {
             await removeFromCart(productId);
             return;
@@ -195,35 +150,45 @@ export const CartProvider = ({ children }) => {
         setIsLoading(true);
         setError(null);
         try {
-            const headers = await getAuthHeaders();
-            const response = await fetch(`${API_BASE_URL}/cart/update/${productId}?quantity=${newQuantity}`, {
-                method: 'PUT',
-                headers: headers,
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to decrease quantity.');
-            }
-
+            await axios.put(`${API_BASE_URL}/cart/update/${productId}?quantity=${newQuantity}`);
             await fetchCart();
             toast.success("Količina ažurirana!");
         } catch (err) {
             console.error("Error decreasing quantity:", err);
-            setError(err.message);
-            toast.error("Greška pri smanjenju količine: " + err.message);
+            const errorMessage = err.response?.data?.message || err.message || 'Greška pri smanjenju količine.';
+            setError(errorMessage);
+            toast.error("Greška pri smanjenju količine: " + errorMessage);
         } finally {
             setIsLoading(false);
         }
     };
 
-    // Funkcija za izračunavanje ukupne cijene (na frontendu)
-    // Koristimo ga i dalje za frontend rendering jer to radi na osnovu trenutnog cartItems stanja
-    const calculateTotalPrice = () => {
-        return cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
+    const clearCart = async () => {
+        if (!user) return;
+        if (!window.confirm("Jeste li sigurni da želite isprazniti cijelu košaricu?")) {
+            return;
+        }
+        setIsLoading(true);
+        setError(null);
+        try {
+            // PROMIJENJENA LINIJA OVDJE: Dodaj /clear na kraj URL-a
+            await axios.delete(`${API_BASE_URL}/cart/clear`); 
+            await fetchCart();
+            toast.info("Košarica je ispražnjena.");
+        } catch (err) {
+            console.error("Error clearing cart:", err);
+            const errorMessage = err.response?.data?.message || err.message || 'Greška pri pražnjenju košarice.';
+            setError(errorMessage);
+            toast.error("Greška pri pražnjenju košarice: " + errorMessage);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
-    // Ukupan broj stavki u korpi (za Header, itd.)
+    const calculateTotalPrice = useCallback(() => {
+        return cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
+    }, [cartItems]);
+
     const totalItemsInCart = cartItems.reduce((total, item) => total + item.quantity, 0);
 
     const value = {
@@ -232,11 +197,12 @@ export const CartProvider = ({ children }) => {
         removeFromCart,
         increaseQuantity,
         decreaseQuantity,
+        clearCart,
         calculateTotalPrice,
         totalItemsInCart,
-        isLoading, // Izloži isLoading status
-        error,     // Izloži error status
-        fetchCart, // Izloži fetchCart da se može ručno pozvati ako zatreba
+        isLoading,
+        error,
+        fetchCart,
     };
 
     return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

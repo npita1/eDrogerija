@@ -2,86 +2,93 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
+import { toast } from 'react-toastify';
 
-// Uvjeri se da si ovu izmjenu već napravila u svom fajlu
 const CategoryButton = styled.button.withConfig({
-  shouldForwardProp: (prop) => !['active'].includes(prop)
+    shouldForwardProp: (prop) => !['active'].includes(prop)
 })`
-  background-color: ${(props) => props.active ? 'var(--primary-color)' : 'var(--background-color)'};
-  color: ${(props) => props.active ? 'var(--white-color)' : 'var(--text-color)'};
-  padding: 10px 20px;
-  border-radius: 25px;
-  font-size: 1em;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  border: 1px solid var(--border-color);
+    background-color: ${(props) => props.active ? 'var(--primary-color)' : 'var(--background-color)'};
+    color: ${(props) => props.active ? 'var(--white-color)' : 'var(--text-color)'};
+    padding: 10px 20px;
+    border-radius: 25px;
+    font-size: 1em;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: 1px solid var(--border-color);
+    cursor: pointer;
 
-  &:hover {
-      background-color: var(--primary-color);
-      color: var(--white-color);
-      transform: translateY(-2px);
-  }
+    &:hover {
+        background-color: var(--primary-color);
+        color: var(--white-color);
+        transform: translateY(-2px);
+    }
 `;
 
 const ProductsContainer = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 25px;
-  margin-top: 30px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 25px;
+    margin-top: 30px;
 `;
 
 const ProductCard = styled.div`
-  background-color: var(--white-color);
-  border-radius: 10px;
-  box-shadow: var(--shadow-color) 0px 2px 10px;
-  padding: 20px;
-  text-align: center;
-  transition: transform 0.2s ease-in-out;
-
-  &:hover {
-    transform: translateY(-5px);
-  }
-
-  img {
-    max-width: 100%;
-    height: 200px;
-    object-fit: contain;
-    border-radius: 5px;
-    margin-bottom: 15px;
-  }
-
-  h3 {
-    font-size: 1.3em;
-    margin-bottom: 8px;
-    color: var(--text-color);
-  }
-
-  p {
-    font-size: 0.95em;
-    color: var(--light-text-color);
-    margin-bottom: 5px;
-  }
-
-  .price {
-    font-size: 1.2em;
-    font-weight: bold;
-    color: var(--primary-color);
-    margin-top: 10px;
-  }
-
-  button {
-    background-color: var(--secondary-color);
-    color: var(--white-color);
-    padding: 10px 15px;
-    border-radius: 20px;
-    font-size: 0.9em;
-    margin-top: 15px;
-    transition: background-color 0.3s ease;
+    background-color: var(--white-color);
+    border-radius: 10px;
+    box-shadow: var(--shadow-color) 0px 2px 10px;
+    padding: 20px;
+    text-align: center;
+    transition: transform 0.2s ease-in-out;
 
     &:hover {
-      background-color: darken(var(--secondary-color), 10%);
+        transform: translateY(-5px);
     }
-  }
+
+    img {
+        max-width: 100%;
+        height: 200px;
+        object-fit: contain;
+        border-radius: 5px;
+        margin-bottom: 15px;
+    }
+
+    h3 {
+        font-size: 1.3em;
+        margin-bottom: 8px;
+        color: var(--text-color);
+    }
+
+    p {
+        font-size: 0.95em;
+        color: var(--light-text-color);
+        margin-bottom: 5px;
+    }
+
+    .price {
+        font-size: 1.2em;
+        font-weight: bold;
+        color: var(--primary-color);
+        margin-top: 10px;
+    }
+
+    button {
+        background-color: var(--secondary-color);
+        color: var(--white-color);
+        padding: 10px 15px;
+        border-radius: 20px;
+        font-size: 0.9em;
+        margin-top: 15px;
+        transition: background-color 0.3s ease;
+        border: none;
+        cursor: pointer;
+
+    &:hover {
+      background-color: var(--secondary-color);
+      filter: brightness(0.95);
+    }
+        /* Uklonjeni :disabled stilovi jer dugmad više neće biti onemogućena */
+    }
 `;
 
 const CategoriesContainer = styled.div`
@@ -96,9 +103,8 @@ const CategoriesContainer = styled.div`
     box-shadow: var(--shadow-color) 0px 2px 10px;
 `;
 
-// Tvoje Enum kategorije, prenesene na frontend
 const ALL_CATEGORIES = [
-    { name: "ALL", displayName: "Svi Proizvodi" }, // Specijalna kategorija za "Svi Proizvodi"
+    { name: "ALL", displayName: "Svi Proizvodi" },
     { name: "ZDRAVLJE", displayName: "Zdravlje" },
     { name: "SMINKA", displayName: "Šminka" },
     { name: "HIGIJENA", displayName: "Higijena" },
@@ -110,57 +116,74 @@ const ALL_CATEGORIES = [
 ];
 
 function HomePage() {
-  const [products, setProducts] = useState([]);
-  // Inicijalno je odabrana kategorija "ALL" (Svi Proizvodi)
-  const [selectedCategory, setSelectedCategory] = useState(ALL_CATEGORIES[0].name);
-  const API_GATEWAY_URL = 'http://localhost:8085/api';
+    const [products, setProducts] = useState([]);
+    const [selectedCategory, setSelectedCategory] = useState(ALL_CATEGORIES[0].name);
+    const API_GATEWAY_URL = 'http://localhost:8085/api';
 
-  useEffect(() => {
-    // Nema poziva za dohvaćanje kategorija, jer su hardkodirane
-    
-    axios.get(`${API_GATEWAY_URL}/products`)
-      .then(response => {
-        setProducts(response.data);
-      })
-      .catch(error => console.error("Error fetching products:", error));
-  }, []); // Prazan array znači da se useEffect pokreće samo jednom, pri montiranju komponente
+    const { addToCart } = useCart();
+    const { user } = useAuth();
 
-  const filteredProducts = selectedCategory === ALL_CATEGORIES[0].name
-    ? products
-    : products.filter(product => product.category === selectedCategory); 
-    // Pretpostavka: product.category iz backenda je string koji se poklapa sa enum imenom (npr. "NJEGA_KOZE")
+    // Uklonjeno stanje za praćenje učitavanja pojedinačnih proizvoda
+    // const [addingToCartProductId, setAddingToCartProductId] = useState(null);
 
-  return (
-    <div>
-      <CategoriesContainer>
-        {ALL_CATEGORIES.map((category) => (
-            <CategoryButton 
-                key={category.name} 
-                onClick={() => setSelectedCategory(category.name)}
-                active={selectedCategory === category.name}
-            >
-                {category.displayName}
-            </CategoryButton>
-        ))}
-      </CategoriesContainer>
+    useEffect(() => {
+        axios.get(`${API_GATEWAY_URL}/products`)
+            .then(response => {
+                setProducts(response.data);
+            })
+            .catch(error => {
+                console.error("Error fetching products:", error);
+                toast.error("Greška pri učitavanju proizvoda.");
+            });
+    }, []);
 
-      <ProductsContainer>
-        {filteredProducts.map(product => (
-          <ProductCard key={product.id}>
-            <Link to={`/products/${product.id}`}>
-              <img src={product.imageUrl || 'https://via.placeholder.com/200'} alt={product.name} />
-              <h3>{product.name}</h3>
-              <p>{product.brand}</p>
-              {/* Ovdje možeš dodati i prikaz kategorije ako želiš */}
-              {/* <p>Kategorija: {ALL_CATEGORIES.find(cat => cat.name === product.category)?.displayName || product.category}</p> */}
-              <p className="price">{product.price} KM</p>
-            </Link>
-            <button>Dodaj u korpu</button>
-          </ProductCard>
-        ))}
-      </ProductsContainer>
-    </div>
-  );
+    const filteredProducts = selectedCategory === ALL_CATEGORIES[0].name
+        ? products
+        : products.filter(product => product.category === selectedCategory);
+
+    const handleAddToCart = async (product) => {
+        // Više nema potrebe za postavljanjem/resetiranjem stanja
+        // setAddingToCartProductId(product.id);
+        await addToCart(product);
+        // setAddingToCartProductId(null);
+    };
+
+    return (
+        <div>
+            <CategoriesContainer>
+                {ALL_CATEGORIES.map((category) => (
+                    <CategoryButton
+                        key={category.name}
+                        onClick={() => setSelectedCategory(category.name)}
+                        active={selectedCategory === category.name}
+                    >
+                        {category.displayName}
+                    </CategoryButton>
+                ))}
+            </CategoriesContainer>
+
+            <ProductsContainer>
+                {filteredProducts.map(product => (
+                    <ProductCard key={product.id}>
+                        <Link to={`/products/${product.id}`}>
+                            <img src={product.imageUrl || 'https://via.placeholder.com/200'} alt={product.name} />
+                            <h3>{product.name}</h3>
+                            <p>{product.brand}</p>
+                            <p className="price">{product.price} KM</p>
+                        </Link>
+                        <button
+                            onClick={() => handleAddToCart(product)}
+                            // Uklonjen disabled atribut
+                            // disabled={addingToCartProductId === product.id}
+                        >
+                            {/* Uklonjen uslovni tekst, uvijek je "Dodaj u korpu" */}
+                            Dodaj u korpu
+                        </button>
+                    </ProductCard>
+                ))}
+            </ProductsContainer>
+        </div>
+    );
 }
 
 export default HomePage;

@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import styled from 'styled-components';
 import axios from 'axios';
 import { useCart } from '../context/CartContext';
-import { toast } from 'react-toastify';
+import { toast } from 'react-toastify'; // I dalje ga treba ako se koristi za druge stvari u komponenti
 
 const DetailContainer = styled.div`
     background-color: var(--white-color);
@@ -80,11 +80,11 @@ const ProductInfo = styled.div`
         border-radius: 25px;
         font-size: 1.1em;
         font-weight: 600;
-        transition: background-color 0.3s ease;
-        width: auto; // Podesi širinu dugmeta
+        transition: background-color 0.3s ease, filter 0.3s ease;
+        width: auto;
 
         &:hover {
-            filter: brightness(0.9); 
+            filter: brightness(0.9);
         }
 
         @media (max-width: 768px) {
@@ -94,7 +94,6 @@ const ProductInfo = styled.div`
     }
 `;
 
-// Novi styled component za odabir količine
 const QuantitySelector = styled.div`
     margin-bottom: 20px;
     display: flex;
@@ -119,16 +118,14 @@ const QuantitySelector = styled.div`
 function ProductDetailPage() {
     const { id } = useParams();
     const [product, setProduct] = useState(null);
-    const [quantity, setQuantity] = useState(1); // Novo stanje za odabranu količinu
+    const [quantity, setQuantity] = useState(1);
     const [error, setError] = useState('');
     const API_GATEWAY_URL = 'http://localhost:8085/api';
-    const { addToCart } = useCart(); // Dohvati addToCart funkciju
+    const { addToCart } = useCart(); // addToCart sada prikazuje toast notifikacije
 
     useEffect(() => {
-        setError(''); // Očisti greške pri svakoj promjeni ID-a
-        
-        // *** KLJUČNA IZMJENA OVDJE: Validacija za Long ID ***
-        // Provjerava da li je ID definiran, da li je broj i da li je veći od nule (opcionalno, ali dobra praksa za ID-eve)
+        setError('');
+
         if (!id || isNaN(Number(id)) || Number(id) <= 0) {
             setError("Nevažeći ID proizvoda (očekivan numerički ID).");
             setProduct(null);
@@ -141,7 +138,6 @@ function ProductDetailPage() {
             })
             .catch(error => {
                 console.error("Error fetching product details:", error);
-                // Ako je 404, specificiraj poruku "Proizvod nije pronađen"
                 if (error.response && error.response.status === 404) {
                     setError("Proizvod sa datim ID-jem nije pronađen.");
                 } else {
@@ -152,13 +148,10 @@ function ProductDetailPage() {
     }, [id]);
 
     const handleAddToCart = async () => {
-        if (!product) return; // Ne dozvoli dodavanje ako proizvod nije učitan
-        const success = await addToCart(product.id, quantity);
-        if (success) {
-            toast.success(`${quantity}x ${product.name} dodano u košaricu!`);
-        } else {
-            toast.error('Nije uspjelo dodavanje u košaricu. Provjerite prijavu.');
-        }
+        if (!product) return;
+        // IZMJENA: Nema više provjere `success` i duplih toast poziva
+        // `addToCart` iz CartContext.js sada upravlja svim toast porukama
+        await addToCart(product, quantity); 
     };
 
     if (error) {
@@ -202,7 +195,6 @@ function ProductDetailPage() {
                     <p><strong>Dostupna količina:</strong> {product.quantity}</p>
                     <p className="price">{product.price} KM</p>
 
-                    {/* Dodaj input za količinu */}
                     <QuantitySelector>
                         <label htmlFor="quantity">Količina:</label>
                         <input
@@ -215,7 +207,6 @@ function ProductDetailPage() {
                         />
                     </QuantitySelector>
 
-                    {/* Ažurirano dugme */}
                     <button onClick={handleAddToCart}>Dodaj u korpu</button>
                 </ProductInfo>
             </DetailContainer>

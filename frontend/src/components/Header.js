@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
 import { FaShoppingCart, FaUserCircle } from 'react-icons/fa';
-import AuthModal from './AuthModal'; // Važno: Ostaje importan ovdje
-import { useAuth } from '../context/AuthContext'; // Uvezi useAuth
-import { useCart } from '../context/CartContext'; // Uvezi useCart
+import AuthModal from './AuthModal'; 
+import { useAuth } from '../context/AuthContext'; 
+import { useCart } from '../context/CartContext'; 
 
 const HeaderContainer = styled.header`
   background-color: var(--primary-color);
@@ -71,8 +71,8 @@ const AuthButton = styled.button`
   font-size: 1em;
   font-weight: 600;
   transition: all 0.3s ease;
-  border: none; /* Dodano: dugmad moraju imati border: none */
-  cursor: pointer; /* Dodano: dugmad moraju imati cursor: pointer */
+  border: none; 
+  cursor: pointer; 
 
 
   &:hover {
@@ -126,11 +126,11 @@ function Header() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [modalInitialMode, setModalInitialMode] = useState('login'); 
 
-  const { user, logout } = useAuth(); // Koristi user i logout iz AuthContext-a
-  const { totalItemsInCart } = useCart(); // Koristi totalItemsInCart iz CartContext-a
+  const { user, logout } = useAuth(); 
+  const { totalItemsInCart } = useCart(); 
 
   const handleLogout = () => {
-    logout(); // Pozovi logout iz AuthContext-a
+    logout(); 
   };
 
   const openAuthModal = (mode) => {

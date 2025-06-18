@@ -1,137 +1,357 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+
 import axios from 'axios';
+
+import { toast } from 'react-toastify'; // Dodano za toast notifikacije
+
 
 const AuthContext = createContext(null);
 
+
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('jwt_token')); // Ovo će sada držati 'token' string
-  const API_GATEWAY_URL = 'http://localhost:8085/api';
 
-  const login = async (username, password) => {
-    try {
-      const response = await axios.post(`${API_GATEWAY_URL}/auth/login`, { username, password });
-      
-      // *** KLJUČNA IZMJENA OVDJE: Koristimo 'token' polje iz response.data ***
-      const receivedToken = response.data.token; 
-      
-      if (!receivedToken) {
-          console.error("Login response did not contain a token.");
-          return false;
-      }
+    const [user, setUser] = useState(null);
 
-      localStorage.setItem('jwt_token', receivedToken); // Spremi primljeni token
-      setToken(receivedToken);
+    const [token, setToken] = useState(localStorage.getItem('jwt_token'));
 
-      // Dekodiranje tokena za dobivanje username-a (subjecta) i rola
-      try {
-        const base64Url = receivedToken.split('.')[1]; // Koristimo receivedToken ovdje
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-        }).join(''));
-        const decodedPayload = JSON.parse(jsonPayload);
-        
-        setUser({ 
-            username: decodedPayload.sub, 
-            roles: decodedPayload.roles || [], 
-            email: decodedPayload.email || '' 
-        });
-      } catch (e) {
-          console.error("Failed to decode token after login:", e);
-          setUser({ username, roles: [] }); // Fallback na username ako dekodiranje ne uspije
-      }
-      
-      return true; // Uspješna prijava
-    } catch (error) {
-      console.error('Login failed:', error.response ? error.response.data : error.message);
-      return false; // Neuspješna prijava
-    }
-  };
+    const [isLoading, setIsLoading] = useState(true); // Dodano: za praćenje statusa učitavanja
 
-  const register = async (username, email, password) => {
-    try {
-      const response = await axios.post(`${API_GATEWAY_URL}/auth/register`, { username, email, password });
-      
-      // *** KLJUČNA IZMJENA OVDJE: Koristimo 'token' polje iz response.data ***
-      const receivedToken = response.data.token; 
-      
-      if (receivedToken) { // Automatski prijavi korisnika nakon registracije ako dobije token
-          localStorage.setItem('jwt_token', receivedToken);
-          setToken(receivedToken);
-          // Dekodiraj i postavi korisnika kao i kod prijave
-          try {
-            const base64Url = receivedToken.split('.')[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join(''));
-            const decodedPayload = JSON.parse(jsonPayload);
-            setUser({ 
-                username: decodedPayload.sub, 
-                roles: decodedPayload.roles || [], 
-                email: decodedPayload.email || '' 
-            });
-          } catch (e) {
-              console.error("Failed to decode token after registration:", e);
-              setUser({ username, roles: [] });
-          }
-      }
+    const [error, setError] = useState(null); // Dodano: za greške
 
-      return true; // Uspješna registracija (čak i ako nije automatski prijavljen)
-    } catch (error) {
-      console.error('Registration failed:', error.response ? error.response.data : error.message);
-      return false; // Neuspješna registracija
-    }
-  };
 
-  const logout = () => {
-    localStorage.removeItem('jwt_token');
-    setToken(null);
-    setUser(null);
-  };
+    // IZMIJENJENO: API Gateway URL na port 8085
 
-  useEffect(() => {
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    } else {
-      delete axios.defaults.headers.common['Authorization'];
-    }
-  }, [token]);
+    const API_GATEWAY_URL = 'http://localhost:8085/api';
 
-  useEffect(() => {
-    if (token) {
+
+    // Funkcija za dekodiranje JWT tokena (pomoćna funkcija)
+
+    const decodeJwt = useCallback((jwtToken) => {
+
         try {
-            const base64Url = token.split('.')[1];
+
+            const base64Url = jwtToken.split('.')[1];
+
             const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+
             const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+
                 return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+
             }).join(''));
-            const decodedPayload = JSON.parse(jsonPayload);
-            
-            const expirationTime = decodedPayload.exp * 1000;
-            if (Date.now() >= expirationTime) {
-                console.warn("JWT token has expired locally.");
-                logout();
-            } else {
-                setUser({ 
-                    username: decodedPayload.sub, 
-                    roles: decodedPayload.roles || [],
-                    email: decodedPayload.email || ''
-                }); 
-            }
+
+            return JSON.parse(jsonPayload);
+
         } catch (e) {
-            console.error("Failed to decode token from localStorage or token invalid", e);
-            logout();
+
+            console.error("Failed to decode token:", e);
+
+            return null;
+
         }
-    }
-  }, [token]);
 
-  const value = { user, login, register, logout, token };
+    }, []);
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+
+    // DODANO: Funkcija za dohvaćanje tokena (za upotrebu u drugim kontekstima/komponentama)
+
+    const getToken = useCallback(() => {
+
+        return localStorage.getItem('jwt_token');
+
+    }, []);
+
+
+    const login = async (username, password) => {
+
+        setIsLoading(true); // DODANO
+
+        setError(null);    // DODANO
+
+        try {
+
+            // IZMIJENJENO: Endpoint za login je sada /auth/authenticate prema tvom backendu
+
+            const response = await axios.post(`${API_GATEWAY_URL}/auth/login`, { username, password });
+
+           
+
+            const receivedToken = response.data.token;
+
+           
+
+            if (!receivedToken) {
+
+                console.error("Login response did not contain a token.");
+
+                setError("Neuspješna prijava. Token nije primljen."); // DODANO
+
+                toast.error("Neuspješna prijava. Token nije primljen."); // DODANO
+
+                return false;
+
+            }
+
+
+            localStorage.setItem('jwt_token', receivedToken);
+
+            setToken(receivedToken);
+
+
+            const decodedPayload = decodeJwt(receivedToken); // Koristi pomoćnu funkciju
+
+            if (decodedPayload) {
+
+                setUser({
+
+                    username: decodedPayload.sub, // 'sub' bi trebao biti username
+
+                    roles: decodedPayload.roles || [],
+
+                    email: decodedPayload.email || ''
+
+                });
+
+                toast.success("Uspješna prijava!"); // DODANO
+
+            } else {
+
+                setUser({ username: username, roles: [], email: '' }); // Fallback
+
+                toast.warning("Uspješna prijava, ali podaci o korisniku nisu potpuno učitani."); // DODANO
+
+            }
+
+           
+
+            return true;
+
+        } catch (error) {
+
+            console.error('Login failed:', error.response ? error.response.data : error.message);
+
+            const errorMessage = error.response?.data?.message || 'Neispravno korisničko ime ili lozinka.'; // DODANO
+
+            setError(errorMessage); // DODANO
+
+            toast.error("Greška pri prijavi: " + errorMessage); // DODANO
+
+            return false;
+
+        } finally {
+
+            setIsLoading(false); // DODANO
+
+        }
+
+    };
+
+
+    // IZMIJENJENO: Dodani firstName, lastName, phoneNumber, address za registraciju
+
+    const register = async (username, email, password, firstName, lastName, phoneNumber, address) => {
+
+        setIsLoading(true); // DODANO
+
+        setError(null);    // DODANO
+
+        try {
+
+            const response = await axios.post(`${API_GATEWAY_URL}/auth/register`, {
+
+                username,
+
+                email,
+
+                password,
+
+                firstName,
+
+                lastName,
+
+                phoneNumber,
+
+                address
+
+            });
+
+           
+
+            const receivedToken = response.data.token;
+
+           
+
+            if (receivedToken) {
+
+                localStorage.setItem('jwt_token', receivedToken);
+
+                setToken(receivedToken);
+
+               
+
+                const decodedPayload = decodeJwt(receivedToken); // Koristi pomoćnu funkciju
+
+                if (decodedPayload) {
+
+                    setUser({
+
+                        username: decodedPayload.sub,
+
+                        roles: decodedPayload.roles || [],
+
+                        email: decodedPayload.email || ''
+
+                    });
+
+                    toast.success("Registracija uspješna! Prijavljeni ste."); // DODANO
+
+                } else {
+
+                    setUser({ username, roles: [], email }); // Fallback
+
+                    toast.warning("Registracija uspješna, ali podaci o korisniku nisu potpuno učitani."); // DODANO
+
+                }
+
+            } else {
+
+                toast.success("Registracija uspješna! Molimo prijavite se."); // DODANO
+
+            }
+
+
+            return true;
+
+        } catch (error) {
+
+            console.error('Registration failed:', error.response ? error.response.data : error.message);
+
+            const errorMessage = error.response?.data?.message || 'Registracija neuspješna.'; // DODANO
+
+            setError(errorMessage); // DODANO
+
+            toast.error("Greška pri registraciji: " + errorMessage); // DODANO
+
+            return false;
+
+        } finally {
+
+            setIsLoading(false); // DODANO
+
+        }
+
+    };
+
+
+    const logout = () => {
+
+        localStorage.removeItem('jwt_token');
+
+        setToken(null);
+
+        setUser(null);
+
+        delete axios.defaults.headers.common['Authorization']; // DODANO: Ukloni header i pri odjavi
+
+        toast.info("Odjavljeni ste."); // DODANO
+
+    };
+
+
+    // IZMIJENJENO: Axios interceptor umjesto direktnog postavljanja headera u useEffect
+
+    // Ovo osigurava da se token šalje sa SVIM Axios zahtjevima
+
+    useEffect(() => {
+
+        const requestInterceptor = axios.interceptors.request.use(config => {
+
+            const currentToken = localStorage.getItem('jwt_token');
+
+            if (currentToken) {
+
+                config.headers.Authorization = `Bearer ${currentToken}`;
+
+            }
+
+            return config;
+
+        }, error => {
+
+            return Promise.reject(error);
+
+        });
+
+
+        // Cleanup function for the interceptor
+
+        return () => {
+
+            axios.interceptors.request.eject(requestInterceptor);
+
+        };
+
+    }, []);
+
+
+    // Učitavanje korisnika pri prvom renderu ili osvježavanju stranice
+
+    useEffect(() => {
+
+        const storedToken = getToken();
+
+        if (storedToken) {
+
+            const decodedPayload = decodeJwt(storedToken);
+
+            if (decodedPayload) {
+
+                const expirationTime = decodedPayload.exp * 1000;
+
+                if (Date.now() >= expirationTime) {
+
+                    console.warn("JWT token has expired locally.");
+
+                    logout(); // Odjavi ako je token istekao
+
+                } else {
+
+                    setUser({
+
+                        username: decodedPayload.sub,
+
+                        roles: decodedPayload.roles || [],
+
+                        email: decodedPayload.email || ''
+
+                    });
+
+                }
+
+            } else {
+
+                logout(); // Odjavi ako token nije validan
+
+            }
+
+        }
+
+        setIsLoading(false); // DODANO: Postavi isLoading na false nakon provjere tokena
+
+    }, [getToken, decodeJwt]); // Dodane zavisnosti
+
+
+    const value = { user, login, register, logout, token, getToken, isLoading, error }; // DODANO: getToken, isLoading, error
+
+
+    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+
 };
+
 
 export const useAuth = () => {
-  return useContext(AuthContext);
+
+    return useContext(AuthContext);
+
 };
+
