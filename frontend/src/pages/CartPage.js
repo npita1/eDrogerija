@@ -1,9 +1,19 @@
+// CartPage.jsx
+
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { useCart } from '../context/CartContext';
+import { useCart } from '../context/CartContext'; // Provjerite da li je putanja ispravna
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 import AuthModal from '../components/AuthModal';
+import { FaPlus, FaMinus, FaTrash } from 'react-icons/fa';
+import OrderConfirmationModal from '../components/modals/OrderConfirmationModal';
+import OrderSuccessModal from '../components/modals/OrderSuccessModal';
+import { formatPrice } from '../utils/formatPrice';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+// --- Styled Komponente (bez promjena u odnosu na prethodnu ispravku za slike) ---
 
 const CartPageContainer = styled.div`
     padding: 40px;
@@ -15,21 +25,25 @@ const CartPageContainer = styled.div`
     min-height: 50vh;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
     text-align: center;
+
+    @media (max-width: 768px) {
+        padding: 20px;
+    }
 `;
 
 const CartTitle = styled.h2`
     color: var(--primary-color);
     margin-bottom: 30px;
     font-size: 2.5em;
+    text-align: center;
 `;
 
 const EmptyCartMessage = styled.p`
     font-size: 1.2em;
     color: var(--text-color);
-    margin-bottom: 20px;
+    margin: 50px 0;
+    text-align: center;
 `;
 
 const LoginPrompt = styled.div`
@@ -41,14 +55,27 @@ const LoginPrompt = styled.div`
     font-size: 1.1em;
     color: var(--text-color);
     box-shadow: var(--shadow-color) 0px 1px 5px;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 
     p {
-        margin-bottom: 15px;
+        margin-bottom: 0;
     }
 
     strong {
         color: var(--primary-color);
     }
+`;
+
+const LoginButtonContainer = styled.div`
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
 `;
 
 const LoginButton = styled.button`
@@ -61,13 +88,15 @@ const LoginButton = styled.button`
     transition: background-color 0.3s ease;
     border: none;
     cursor: pointer;
+    flex-grow: 1;
+    max-width: 150px;
 
     &:hover {
         filter: brightness(0.9);
     }
 `;
 
-const ContinueShoppingButton = styled(Link)`
+const StyledLinkButton = styled(Link)`
     background-color: var(--secondary-color);
     color: var(--white-color);
     padding: 12px 25px;
@@ -77,12 +106,15 @@ const ContinueShoppingButton = styled(Link)`
     font-size: 1.1em;
     margin-top: 30px;
     transition: background-color 0.3s ease, transform 0.3s ease;
+    display: inline-block;
+    text-align: center;
 
     &:hover {
         filter: brightness(0.9);
         transform: translateY(-2px);
     }
 `;
+
 
 const CartItemsList = styled.ul`
     list-style: none;
@@ -101,34 +133,56 @@ const CartItem = styled.li`
     &:last-child {
         border-bottom: none;
     }
+    a {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        text-decoration: none;
+        color: inherit;
+    }
 `;
 
 const ItemInfo = styled.div`
     display: flex;
-    align-items: center;
-    gap: 15px;
-    img {
-        width: 60px;
-        height: 60px;
-        object-fit: cover;
-        border-radius: 5px;
-    }
+    flex-direction: column;
+    justify-content: center;
+    flex-grow: 1;
+    
     span {
         font-weight: 500;
+        color: var(--text-color);
+    }
+    p {
+        font-size: 0.9em;
+        color: var(--light-text-color);
+        margin: 0;
     }
 `;
+const ItemImage = styled.img`
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 5px;
+    flex-shrink: 0;
+`;
+
 
 const ItemQuantity = styled.div`
     display: flex;
     align-items: center;
     gap: 10px;
+    margin-right: 15px;
+
     button {
-        background: var(--secondary-color-light);
-        border: 1px solid var(--secondary-color);
+        background: var(--background-color-light);
+        border: 1px solid var(--border-color);
         border-radius: 5px;
-        padding: 5px 10px;
+        padding: 5px 8px;
         cursor: pointer;
         font-weight: bold;
+        color: var(--text-color);
+        transition: background-color 0.2s ease, color 0.2s ease;
+
         &:hover {
             background-color: var(--secondary-color);
             color: var(--white-color);
@@ -136,13 +190,22 @@ const ItemQuantity = styled.div`
         &:disabled {
             background-color: #cccccc;
             cursor: not-allowed;
+            opacity: 0.6;
         }
+    }
+    span {
+        font-weight: bold;
+        color: var(--text-color);
+        min-width: 25px;
+        text-align: center;
     }
 `;
 
 const ItemPrice = styled.span`
     font-weight: bold;
     color: var(--primary-color);
+    white-space: nowrap;
+    margin-right: 10px;
 `;
 
 const TotalPriceContainer = styled.div`
@@ -156,41 +219,47 @@ const TotalPriceContainer = styled.div`
     color: var(--primary-color);
 `;
 
-const CheckoutButton = styled(Link)`
-    background-color: var(--primary-color);
-    color: var(--white-color);
-    padding: 15px 30px;
-    border-radius: 30px;
-    text-decoration: none;
-    font-weight: 700;
-    font-size: 1.2em;
+const ActionButtonContainer = styled.div`
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
     margin-top: 30px;
-    transition: background-color 0.3s ease, transform 0.3s ease;
+    flex-wrap: wrap;
 
-    &:hover {
-        filter: brightness(0.9);
-        transform: translateY(-2px);
+    button, ${StyledLinkButton} {
+        padding: 12px 25px;
+        border-radius: 25px;
+        font-size: 1.1em;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.3s ease, filter 0.3s ease;
+        border: none;
+        text-decoration: none;
+        text-align: center;
+        flex: 1;
+        min-width: 180px;
+
+        &:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
     }
 `;
 
 const ClearCartButton = styled.button`
     background-color: #dc3545;
     color: var(--white-color);
-    padding: 10px 20px;
-    border-radius: 25px;
-    border: none;
-    cursor: pointer;
-    font-weight: 600;
-    margin-top: 20px;
-    transition: background-color 0.3s ease, transform 0.3s ease;
-
     &:hover {
         background-color: #c82333;
-        transform: translateY(-2px);
     }
-    &:disabled {
-        background-color: #cccccc;
-        cursor: not-allowed;
+`;
+
+const OrderButton = styled.button`
+    background-color: var(--secondary-color);
+    color: var(--white-color);
+    &:hover {
+        filter: brightness(0.9);
     }
 `;
 
@@ -206,10 +275,13 @@ const ErrorMessage = styled.p`
     margin-top: 20px;
 `;
 
+// --- Glavna Komponenta: CartPage ---
+
 function CartPage() {
     const { user } = useAuth();
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
     const [modalInitialMode, setModalInitialMode] = useState('login');
+
 
     const {
         cartItems,
@@ -217,12 +289,18 @@ function CartPage() {
         decreaseQuantity,
         removeFromCart,
         clearCart,
+        placeOrder,
         calculateTotalPrice,
         isLoading,
         error,
+        totalItemsInCart
     } = useCart();
 
     const totalPrice = calculateTotalPrice();
+
+    const [isOrderConfirmationModalOpen, setIsOrderConfirmationModalOpen] = useState(false);
+    const [isOrderSuccessModalOpen, setIsOrderSuccessModalOpen] = useState(false);
+    const [orderDetails, setOrderDetails] = useState(null);
 
     const openAuthModal = (mode) => {
         setModalInitialMode(mode);
@@ -233,16 +311,48 @@ function CartPage() {
         setIsAuthModalOpen(false);
     };
 
+    const handleOpenOrderConfirmation = () => {
+        if (!user) {
+            toast.info("Molimo prijavite se da biste naručili.");
+            openAuthModal('login');
+            return;
+        }
+        if (cartItems.length === 0) {
+            toast.warn("Vaša košarica je prazna. Dodajte proizvode prije naručivanja.");
+            return;
+        }
+        setIsOrderConfirmationModalOpen(true);
+    };
+
+    const handleCloseOrderConfirmation = () => {
+        setIsOrderConfirmationModalOpen(false);
+    };
+
+    const handleConfirmOrder = async () => {
+        const orderData = await placeOrder(); 
+        if (orderData) {
+            setOrderDetails(orderData);
+            setIsOrderConfirmationModalOpen(false);
+            setIsOrderSuccessModalOpen(true);
+        }
+    };
+
+    const handleCloseOrderSuccess = () => {
+        setIsOrderSuccessModalOpen(false);
+    };
+
     if (!user) {
         return (
             <CartPageContainer>
                 <CartTitle>Košarica</CartTitle>
                 <LoginPrompt>
                     <p>Da biste vidjeli sadržaj košarice i dodavali stvari u nju, molimo vas da se <strong>prijavite</strong> ili <strong>registrujete</strong>.</p>
-                    <LoginButton onClick={() => openAuthModal('login')}>Prijavi se</LoginButton>
-                    <LoginButton style={{ marginLeft: '10px' }} onClick={() => openAuthModal('register')}>Registruj se</LoginButton>
+                    <LoginButtonContainer>
+                        <LoginButton onClick={() => openAuthModal('login')}>Prijavi se</LoginButton>
+                        <LoginButton onClick={() => openAuthModal('register')}>Registruj se</LoginButton>
+                    </LoginButtonContainer>
                 </LoginPrompt>
-                <ContinueShoppingButton to="/products">Nastavi kupovinu</ContinueShoppingButton>
+                <StyledLinkButton to="/products">Nastavi kupovinu</StyledLinkButton>
                 {isAuthModalOpen && <AuthModal onClose={closeAuthModal} initialMode={modalInitialMode} />}
             </CartPageContainer>
         );
@@ -262,47 +372,75 @@ function CartPage() {
             <CartPageContainer>
                 <CartTitle>Moja Košarica</CartTitle>
                 <ErrorMessage>Greška pri učitavanju košarice: {error}</ErrorMessage>
-                <ContinueShoppingButton to="/products">Nastavi kupovinu</ContinueShoppingButton>
+                <StyledLinkButton to="/products">Nastavi kupovinu</StyledLinkButton>
             </CartPageContainer>
         );
     }
 
     return (
         <CartPageContainer>
-            <CartTitle>Moja Košarica</CartTitle>
+            <CartTitle>Moja Košarica ({totalItemsInCart})</CartTitle>
             {cartItems.length === 0 ? (
                 <>
                     <EmptyCartMessage>Vaša košarica je prazna.</EmptyCartMessage>
-                    <ContinueShoppingButton to="/products">Nastavi kupovinu</ContinueShoppingButton>
+                    <StyledLinkButton to="/products">Nastavi kupovinu</StyledLinkButton>
                 </>
             ) : (
                 <>
                     <CartItemsList>
                         {cartItems.map(item => (
                             <CartItem key={item.id}>
-                                <ItemInfo>
-                                    {item.imageUrl && <img src={item.imageUrl} alt={item.name} />}
-                                    <span>{item.name}</span>
-                                </ItemInfo>
+                                <Link to={`/products/${item.id}`} style={{ display: 'flex', alignItems: 'center', gap: '15px', textDecoration: 'none', color: 'inherit' }}>
+                                    <ItemImage src={item.imageUrl || 'https://via.placeholder.com/60'} alt={item.name} />
+                                    <ItemInfo>
+                                        <span>{item.name}</span>
+                                        {item.brand && <p>{item.brand}</p>}
+                                    </ItemInfo>
+                                </Link>
                                 <ItemQuantity>
-                                    <button onClick={() => decreaseQuantity(item.id)} disabled={isLoading}>-</button>
+                                    <button onClick={() => decreaseQuantity(item.id)} disabled={isLoading}>
+                                        <FaMinus />
+                                    </button>
                                     <span>{item.quantity}</span>
-                                    <button onClick={() => increaseQuantity(item.id)} disabled={isLoading}>+</button>
-                                    <button onClick={() => removeFromCart(item.id)} disabled={isLoading}>Ukloni</button>
+                                    <button onClick={() => increaseQuantity(item.id)} disabled={isLoading}>
+                                        <FaPlus />
+                                    </button>
                                 </ItemQuantity>
-                                <ItemPrice>{(item.price * item.quantity).toFixed(2)} KM</ItemPrice>
+                                <ItemPrice>{formatPrice(item.price * item.quantity)} KM</ItemPrice>
+                                <button className="remove-button" onClick={() => removeFromCart(item.id)} disabled={isLoading}>
+                                    <FaTrash />
+                                </button>
                             </CartItem>
                         ))}
                     </CartItemsList>
                     <TotalPriceContainer>
-                        Ukupno: {totalPrice.toFixed(2)} KM
+                        Ukupno: {formatPrice(totalPrice)} KM
                     </TotalPriceContainer>
-                    <div style={{ display: 'flex', gap: '20px', marginTop: '20px' }}>
+                    <ActionButtonContainer>
                         <ClearCartButton onClick={clearCart} disabled={isLoading}>Isprazni košaricu</ClearCartButton>
-                        <CheckoutButton to="/checkout">Nastavi na plaćanje</CheckoutButton>
-                    </div>
+                        <OrderButton onClick={handleOpenOrderConfirmation} disabled={isLoading || cartItems.length === 0}>
+                            Naruči
+                        </OrderButton>
+                    </ActionButtonContainer>
                 </>
             )}
+            
+            <OrderConfirmationModal
+                isOpen={isOrderConfirmationModalOpen}
+                onClose={handleCloseOrderConfirmation}
+                cartItems={cartItems}
+                totalAmount={totalPrice}
+                onConfirmOrder={handleConfirmOrder}
+                isOrdering={isLoading}
+            />
+
+            <OrderSuccessModal
+                isOpen={isOrderSuccessModalOpen}
+                onClose={handleCloseOrderSuccess}
+                orderDetails={orderDetails}
+            />
+
+            {isAuthModalOpen && <AuthModal onClose={closeAuthModal} initialMode={modalInitialMode} />}
         </CartPageContainer>
     );
 }

@@ -5,7 +5,9 @@ import axios from 'axios';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
+import { formatPrice } from '../utils/formatPrice';
 
+// Styled Components (ostaju isti kao u tvom kodu)
 const CategoryButton = styled.button.withConfig({
     shouldForwardProp: (prop) => !['active'].includes(prop)
 })`
@@ -87,7 +89,6 @@ const ProductCard = styled.div`
       background-color: var(--secondary-color);
       filter: brightness(0.95);
     }
-        /* Uklonjeni :disabled stilovi jer dugmad više neće biti onemogućena */
     }
 `;
 
@@ -123,9 +124,6 @@ function HomePage() {
     const { addToCart } = useCart();
     const { user } = useAuth();
 
-    // Uklonjeno stanje za praćenje učitavanja pojedinačnih proizvoda
-    // const [addingToCartProductId, setAddingToCartProductId] = useState(null);
-
     useEffect(() => {
         axios.get(`${API_GATEWAY_URL}/products`)
             .then(response => {
@@ -142,10 +140,7 @@ function HomePage() {
         : products.filter(product => product.category === selectedCategory);
 
     const handleAddToCart = async (product) => {
-        // Više nema potrebe za postavljanjem/resetiranjem stanja
-        // setAddingToCartProductId(product.id);
         await addToCart(product);
-        // setAddingToCartProductId(null);
     };
 
     return (
@@ -169,14 +164,12 @@ function HomePage() {
                             <img src={product.imageUrl || 'https://via.placeholder.com/200'} alt={product.name} />
                             <h3>{product.name}</h3>
                             <p>{product.brand}</p>
-                            <p className="price">{product.price} KM</p>
+                            {/* Ovdje koristimo formatPrice funkciju */}
+                            <p className="price">{formatPrice(product.price)} KM</p>
                         </Link>
                         <button
                             onClick={() => handleAddToCart(product)}
-                            // Uklonjen disabled atribut
-                            // disabled={addingToCartProductId === product.id}
                         >
-                            {/* Uklonjen uslovni tekst, uvijek je "Dodaj u korpu" */}
                             Dodaj u korpu
                         </button>
                     </ProductCard>

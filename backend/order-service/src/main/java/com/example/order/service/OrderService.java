@@ -87,10 +87,6 @@ public class OrderService {
                 .shippingLastName(userDetails.getLastName())
                 .shippingAddressPhone(userDetails.getPhoneNumber())
                 .shippingAddressStreet(userDetails.getAddress())
-                // Obrisane linije:
-                // .shippingAddressCity(null)
-                // .shippingAddressPostalCode(null)
-                // .shippingAddressCountry(null)
                 .build();
 
         BigDecimal totalAmount = BigDecimal.ZERO;
@@ -202,6 +198,48 @@ public class OrderService {
         log.info("Order {} status updated to {}.", orderNumber, newStatus);
         return mapToOrderResponse(updatedOrder);
     }
+
+    @Transactional
+    public void cancelOrder(String orderNumber, Long userId) {
+        Order order = orderRepository.findByOrderNumber(orderNumber)
+                .orElseThrow(() -> new EntityNotFoundException("Narudžba sa brojem " + orderNumber + " nije pronađena."));
+
+        // Provjera da li korisnik pokušava otkazati svoju vlastitu narudžbu
+        if (!order.getUserId().equals(userId)) {
+            throw new IllegalArgumentException("Nemate ovlasti za otkazivanje ove narudžbe.");
+        }
+
+        // Provjera statusa: Narudžba se može otkazati samo ako je PENDING
+        if (order.getStatus() != OrderStatus.PENDING) {
+            throw new IllegalArgumentException("Narudžba se može otkazati samo ako je u statusu PENDING. Trenutni status: " + order.getStatus());
+        }
+
+        log.info("Otkazivanje narudžbe {}. Vraćanje stavki na stanje zaliha.", orderNumber);
+        for (OrderItem item : order.getOrderItems()) {
+            try {
+                // Poziv Product Service-a da poveća količinu (vrati na zalihe)
+                restTemplate.postForEntity(
+                        productServiceUrl + "/api/products/increase-quantity/" + item.getProductId() + "?quantity=" + item.getQuantity(),
+                        null,
+                        Void.class
+                );
+                log.info("Povećana količina za proizvod {}: {} nakon otkazivanja narudžbe {}", item.getProductName(), item.getQuantity(), orderNumber);
+            } catch (HttpClientErrorException e) {
+                log.error("HTTP Client Error iz Product Service-a (povećanje) za proizvod {} tokom otkazivanja: Status={}, Tijelo={}", item.getProductId(), e.getStatusCode(), e.getResponseBodyAsString(), e);
+                // Ovdje možete odlučiti kako ćete se nositi s greškom, npr. rollback transakcije
+                throw new RuntimeException("Greška pri vraćanju zaliha za proizvod " + item.getProductName() + " tokom otkazivanja narudžbe.");
+            } catch (Exception e) {
+                log.error("Neuspješno povećavanje količine proizvoda {} tokom otkazivanja narudžbe {}: {}", item.getProductId(), orderNumber, e.getMessage(), e);
+                throw new RuntimeException("Neuspješno vraćanje zaliha za proizvod " + item.getProductName() + " tokom otkazivanja narudžbe.");
+            }
+        }
+
+        // Promjena statusa narudžbe u CANCELED
+        order.setStatus(OrderStatus.CANCELLED);
+        orderRepository.save(order);
+        log.info("Narudžba {} uspješno otkazana i status postavljen na CANCELED.", orderNumber);
+    }
+
 
     private CartResponse getCartDetailsFromCartService(Long userId) {
         log.debug("Calling Cart Service: {}", cartServiceUrl + "/api/cart?userId=" + userId);

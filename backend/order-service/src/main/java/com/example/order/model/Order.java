@@ -45,6 +45,7 @@ public class Order {
     private String shippingAddressPhone;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<OrderItem> orderItems = new ArrayList<>();
 
     @PrePersist

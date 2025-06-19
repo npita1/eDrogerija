@@ -2,8 +2,9 @@ package com.example.order.controller;
 
 import com.example.order.dto.OrderResponse;
 import com.example.order.model.OrderStatus;
-import com.example.order.model.User;
+import com.example.order.model.User; // Pretpostavljam da je User vaša implementacija UserDetails
 import com.example.order.service.OrderService;
+import jakarta.persistence.EntityNotFoundException; // Dodaj import
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +22,6 @@ public class OrderController {
 
     private final OrderService orderService;
 
-    // Kreiranje nove narudžbe iz košarice
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<OrderResponse> placeOrder(@AuthenticationPrincipal UserDetails userDetails) {
@@ -30,7 +30,6 @@ public class OrderController {
         return ResponseEntity.status(HttpStatus.CREATED).body(order);
     }
 
-    // Dohvat svih narudžbi za trenutno autentificiranog korisnika
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<List<OrderResponse>> getMyOrders(@AuthenticationPrincipal UserDetails userDetails) {
@@ -39,17 +38,14 @@ public class OrderController {
         return ResponseEntity.ok(orders);
     }
 
-    // Dohvat narudžbe po broju narudžbe
     @GetMapping("/{orderNumber}")
     @ResponseStatus(HttpStatus.OK)
-    // @PreAuthorize provjerava da li je korisnik ADMIN ILI da li je ID korisnika (iz tokena) isti kao userId narudžbe.
     @PreAuthorize("hasRole('ADMIN') or @orderService.getOrderByOrderNumber(#orderNumber).userId == authentication.principal.id")
     public ResponseEntity<OrderResponse> getOrderByOrderNumber(@PathVariable String orderNumber) {
         OrderResponse order = orderService.getOrderByOrderNumber(orderNumber);
         return ResponseEntity.ok(order);
     }
 
-    // Ažuriranje statusa narudžbe (samo za ADMINA)
     @PutMapping("/{orderNumber}/status")
     @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("hasRole('ADMIN')")
@@ -60,7 +56,22 @@ public class OrderController {
         return ResponseEntity.ok(updatedOrder);
     }
 
-    // Pomoćna metoda za dohvat userId iz UserDetails
+
+    @DeleteMapping("/{orderNumber}")
+    public ResponseEntity<String> cancelOrder(@PathVariable String orderNumber, @AuthenticationPrincipal UserDetails userDetails) {
+        Long userId = extractUserIdFromUserDetails(userDetails);
+        try {
+            orderService.cancelOrder(orderNumber, userId);
+            return ResponseEntity.ok("Narudžba uspješno otkazana.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) { // Hvata i druge potencijalne greške
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Došlo je do interne greške servera: " + e.getMessage());
+        }
+    }
+
     private Long extractUserIdFromUserDetails(UserDetails userDetails) {
         if (userDetails instanceof User) {
             return ((User) userDetails).getId();
