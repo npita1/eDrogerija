@@ -1,0 +1,196 @@
+version: "3.8"
+
+services:
+
+  identity_db:
+    image: mysql:8.0
+    container_name: identity_db
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: identity_db
+    volumes:
+      - identity_db_data:/var/lib/mysql
+    networks:
+      - app_network
+    restart: always
+
+  product_db:
+    image: mysql:8.0
+    container_name: product_db
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: product_db
+    volumes:
+      - product_db_data:/var/lib/mysql
+    networks:
+      - app_network
+    restart: always
+
+  cart_db:
+    image: mysql:8.0
+    container_name: cart_db
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: cart_db
+    volumes:
+      - cart_db_data:/var/lib/mysql
+    networks:
+      - app_network
+    restart: always
+
+  order_db:
+    image: mysql:8.0
+    container_name: order_db
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: order_db
+    volumes:
+      - order_db_data:/var/lib/mysql
+    networks:
+      - app_network
+    restart: always
+
+  eureka-server:
+    build:
+      context: ./backend/eureka-server
+      dockerfile: Dockerfile
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - app_network
+    depends_on:
+      - identity_db
+      - product_db
+      - cart_db
+      - order_db
+    restart: on-failure
+
+  identity-service:
+    build:
+      context: ./backend/identity-service
+      dockerfile: Dockerfile
+    container_name: identity-service
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      # Podaci za bazu dolaze iz application-docker.properties
+      # SPRING_DATASOURCE_URL: jdbc:mysql://identity_db:3306/identity_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      # SPRING_DATASOURCE_USERNAME: root
+      # SPRING_DATASOURCE_PASSWORD: password
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - app_network
+    depends_on:
+      - identity_db
+      - eureka-server
+    restart: on-failure
+
+  product-service:
+    build:
+      context: ./backend/product-service
+      dockerfile: Dockerfile
+    container_name: product-service
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - app_network
+    depends_on:
+      - product_db
+      - eureka-server
+    restart: on-failure
+
+  cart-service:
+    build:
+      context: ./backend/cart-service
+      dockerfile: Dockerfile
+    container_name: cart-service
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - app_network
+    depends_on:
+      - cart_db
+      - eureka-server
+    restart: on-failure
+
+  order-service:
+    build:
+      context: ./backend/order-service # PUTANJA
+      dockerfile: Dockerfile
+    container_name: order-service
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      # Ovi URL-ovi se preuzimaju iz application-docker.properties
+      # PRODUCT_SERVICE_URL: http://product-service:8081
+      # CART_SERVICE_URL: http://cart-service:8082
+      # IDENTITY_SERVICE_URL: http://identity-service:8080
+    networks:
+      - app_network
+    depends_on:
+      - order_db
+      - product-service # Zavisnost od servisa koje poziva
+      - cart-service
+      - identity-service
+      - eureka-server
+    restart: on-failure
+
+  api-gateway:
+    build:
+      context: ./backend/gateway-service # PUTANJA
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8085:8085"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - app_network
+    depends_on:
+      - eureka-server
+      - identity-service # Zavisnost od svih mikroservisa koje rutira
+      - product-service
+      - cart-service
+      - order-service
+    restart: on-failure
+
+  frontend:
+    build:
+      context: ./frontend # PUTANJA
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "3000:80" # Mapira port 3000 na hostu na port 80 (Nginx) u kontejneru
+    networks:
+      - app_network
+    depends_on:
+      - api-gateway # Zavisnost od API Gatewaya
+    restart: on-failure
+
+# --- Docker Networks ---
+# Definicija zajedničke mreže za sve servise
+networks:
+  app_network:
+    driver: bridge
+
+# --- Docker Volumes ---
+# Definicija imenovanih volumena za perzistenciju podataka baza podataka
+volumes:
+  identity_db_data:
+  product_db_data:
+  cart_db_data:
+  order_db_data:
