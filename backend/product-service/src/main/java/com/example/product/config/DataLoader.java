@@ -32,7 +32,7 @@ public class DataLoader implements CommandLineRunner {
                     .description("Potpuni multivitamin za svakodnevnu upotrebu")
                     .price(new BigDecimal("25.99"))
                     .quantity(120)
-                    .imageUrl("url_do_slike_multivit_health")
+                    .imageUrl("https://products.dm-static.com/images/f_auto,q_auto,c_fit,h_440,w_500/v1747455927/assets/pas/images/806a1f7a-81df-4ee4-8848-212a172bec35/mivolis-a-z-tablete-dodatak-prehrani-s-vitaminima-mineralima-i-elementima-u-tragovima-100-kom")
                     .brand("Generic Health")
                     .category(Category.ZDRAVLJE)
                     .build();
@@ -42,7 +42,7 @@ public class DataLoader implements CommandLineRunner {
                     .description("Paleta sjenila sa 12 neutralnih nijansi")
                     .price(new BigDecimal("39.50"))
                     .quantity(80)
-                    .imageUrl("url_do_slike_sjenila_makeup")
+                    .imageUrl("https://products.dm-static.com/images/f_auto,q_auto,c_fit,h_440,w_500/v1747499036/assets/pas/images/f38bb60a-80ee-42d2-989e-abd10afa3c7b/revolution-reloaded-paleta-sjena-za-oci-basic-mattes")
                     .brand("Brand X Cosmetics")
                     .category(Category.SMINKA)
                     .build();
@@ -52,7 +52,7 @@ public class DataLoader implements CommandLineRunner {
                     .description("Sapun za ruke sa zaštitom od bakterija")
                     .price(new BigDecimal("5.00"))
                     .quantity(200)
-                    .imageUrl("url_do_slike_sapuna_hygiene")
+                    .imageUrl("https://products.dm-static.com/images/f_auto,q_auto,c_fit,h_440,w_500/v1747427530/assets/pas/images/a333021f-3697-4ce3-8058-3c553ba6b779/lahor-antibakterijski-cvrsti-sapun-za-ruke")
                     .brand("CleanCo")
                     .category(Category.HIGIJENA)
                     .build();
@@ -62,7 +62,7 @@ public class DataLoader implements CommandLineRunner {
                     .description("Visokokvalitetni protein za mišićni rast")
                     .price(new BigDecimal("60.00"))
                     .quantity(90)
-                    .imageUrl("url_do_slike_proteina_supplements")
+                    .imageUrl("https://products.dm-static.com/images/f_auto,q_auto,c_fit,h_440,w_500/v1747426946/assets/pas/images/9f3843e5-56a9-4546-8e43-0d491bc4f975/proteini-si-100-natural-whey-protein-u-prahu-vanilija")
                     .brand("MuscleTech Pro")
                     .category(Category.SUPLEMENTI)
                     .build();
@@ -72,7 +72,7 @@ public class DataLoader implements CommandLineRunner {
                     .description("Serum za intenzivnu hidrataciju kože")
                     .price(new BigDecimal("45.00"))
                     .quantity(70)
-                    .imageUrl("url_do_slike_seruma_skincare")
+                    .imageUrl("https://products.dm-static.com/images/f_auto,q_auto,c_fit,h_440,w_500/v1747429032/assets/pas/images/252aa222-63e9-4dff-bb53-0a1824f9c300/mak-skincare-aqua-bomb-serum-za-lice")
                     .brand("SkinCare Solutions")
                     .category(Category.NJEGA_KOZE)
                     .build();
@@ -82,7 +82,7 @@ public class DataLoader implements CommandLineRunner {
                     .description("Dubinski regenerator za oporavak kose")
                     .price(new BigDecimal("18.75"))
                     .quantity(110)
-                    .imageUrl("url_do_slike_regeneratora_haircare")
+                    .imageUrl("https://products.dm-static.com/images/f_auto,q_auto,c_fit,h_440,w_500/v1747407451/assets/pas/images/1eaf3f15-86b5-4bb4-bd87-c729e73e3157/maui-moisture-revive-hydrate-regenerator-za-suhu-i-ostecenu-kosu")
                     .brand("HairRescue")
                     .category(Category.NJEGA_KOSE)
                     .build();
@@ -92,7 +92,7 @@ public class DataLoader implements CommandLineRunner {
                     .description("Muški parfem sa drvenastim notama")
                     .price(new BigDecimal("75.00"))
                     .quantity(40)
-                    .imageUrl("url_do_slike_parfema_perfumes")
+                    .imageUrl("https://products.dm-static.com/images/f_auto,q_auto,c_fit,h_440,w_500/v1747421798/assets/pas/images/8e8cd00c-df9e-4de3-9ce6-edb8bad88c5a/burberry-london-men-edt")
                     .brand("Elegant Scents")
                     .category(Category.PARFEMI)
                     .build();
@@ -102,7 +102,7 @@ public class DataLoader implements CommandLineRunner {
                     .description("Pjena za brijanje za osjetljivu kožu")
                     .price(new BigDecimal("9.20"))
                     .quantity(150)
-                    .imageUrl("url_do_slike_pjene_menscare")
+                    .imageUrl("https://products.dm-static.com/images/f_auto,q_auto,c_fit,h_440,w_500/v1747487199/assets/pas/images/59844571-9398-4bd6-825a-08689399aeba/balea-men-sensitive-pjena-za-brijanje")
                     .brand("Grooming Essentials")
                     .category(Category.MUSKA_NJEGA)
                     .build();
