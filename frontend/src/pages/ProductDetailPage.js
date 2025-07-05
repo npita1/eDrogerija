@@ -120,7 +120,7 @@ function ProductDetailPage() {
     const [product, setProduct] = useState(null);
     const [quantity, setQuantity] = useState(1);
     const [error, setError] = useState('');
-    const API_GATEWAY_URL = 'http://localhost:8085/api';
+    const API_GATEWAY_URL = '/api';
     const { addToCart } = useCart(); // addToCart sada prikazuje toast notifikacije
 
     useEffect(() => {

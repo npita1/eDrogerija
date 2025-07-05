@@ -131,7 +131,7 @@ function ProfilePage() {
     const { user, logout, getToken } = useAuth();
     const navigate = useNavigate();
     const [orders, setOrders] = useState([]);
-    const API_GATEWAY_URL = 'http://localhost:8085/api';
+    const API_GATEWAY_URL = '/api';
 
     useEffect(() => {
         if (!user) {

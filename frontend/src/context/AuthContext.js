@@ -10,7 +10,7 @@ export const AuthProvider = ({ children }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    const API_GATEWAY_URL = 'http://localhost:8085/api';
+    const API_GATEWAY_URL = '/api';
 
     const decodeJwt = useCallback((jwtToken) => {
         try {

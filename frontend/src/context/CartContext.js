@@ -15,7 +15,7 @@ export const CartProvider = ({ children }) => {
     const [isLoading, setIsLoading] = useState(false); // Praćenje globalnog loading stanja za cart operacije
     const [error, setError] = useState(null); // Praćenje grešaka za cart operacije
 
-    const API_BASE_URL = 'http://localhost:8085/api';
+    const API_BASE_URL = '/api';
 
     // Funkcija za dohvaćanje korpe sa backenda
     const fetchCart = useCallback(async () => {
