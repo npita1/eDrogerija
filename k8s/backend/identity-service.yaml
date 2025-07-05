@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: identity-service
-          image: npita1/edrogerija-identity-service:latest
+          image: 'npita1/edrogerija-identity-service:latest'
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
@@ -24,7 +24,10 @@ spec:
             - name: SPRING_PROFILES_ACTIVE
               value: docker
             - name: SPRING_DATASOURCE_URL
-              value: jdbc:mysql://identity-db:3306/identity_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-config
+                  key: IDENTITY_DB_URL
             - name: SPRING_DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:
@@ -36,17 +39,10 @@ spec:
                   name: mysql-secrets
                   key: MYSQL_PASSWORD
             - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
-              value: http://eureka-server:8761/eureka/
-          resources:
-            requests:
-              memory: "512Mi"
-            limits:
-              memory: "1Gi"
-  #         envFrom:
-  #          - configMapRef:
-  #                name: backend-config
-  #           -secretRef:
-  #                name: mysql-secrets
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-config
+                  key: EUREKA_URL
 ---
 apiVersion: v1
 kind: Service

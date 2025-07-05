@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: cart-service
-          image: npita1/edrogerija-cart-service:latest
+          image: 'npita1/edrogerija-cart-service:latest'
           imagePullPolicy: Always
           ports:
             - containerPort: 8082
@@ -24,7 +24,10 @@ spec:
             - name: SPRING_PROFILES_ACTIVE
               value: docker
             - name: SPRING_DATASOURCE_URL
-              value: jdbc:mysql://cart-db:3306/cart_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-config
+                  key: CART_DB_URL
             - name: SPRING_DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:
@@ -36,18 +39,26 @@ spec:
                   name: mysql-secrets
                   key: MYSQL_PASSWORD
             - name: PRODUCT_SERVICE_URL
-              value: http://product-service:8081
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-config
+                  key: PRODUCT_SERVICE_URL
             - name: IDENTITY_SERVICE_URL
-              value: http://identity-service:8080
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-config
+                  key: IDENTITY_SERVICE_URL
             - name: ORDER_SERVICE_URL
-              value: http://order-service:8083
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-config
+                  key: ORDER_SERVICE_URL
             - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
-              value: http://eureka-server:8761/eureka/
-  #         envFrom:
-  #          - configMapRef:
-  #                name: backend-config
-  #           -secretRef:
-  #                name: mysql-secrets
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-config
+                  key: EUREKA_URL
+
 ---
 apiVersion: v1
 kind: Service
@@ -57,8 +68,8 @@ spec:
   selector:
     app: cart-service
   ports:
-    - protocol: TCP
-      port: 8082
-      targetPort: 8082
-      name: http
+  - protocol: TCP
+    port: 8082
+    targetPort: 8082
+    name: http
   type: ClusterIP

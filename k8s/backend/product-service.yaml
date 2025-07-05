@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: product-service
-          image: npita1/edrogerija-product-service:latest
+          image: 'npita1/edrogerija-product-service:latest'
           imagePullPolicy: Always
           ports:
             - containerPort: 8081
@@ -24,30 +24,40 @@ spec:
             - name: SPRING_PROFILES_ACTIVE
               value: docker
             - name: SPRING_DATASOURCE_URL
-              value: jdbc:mysql://product-db:3306/product_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-config
+                  key: PRODUCT_DB_URL
             - name: SPRING_DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:
                   name: mysql-secrets
                   key: MYSQL_USER
-            - name: PRODUCT_SERVICE_URL
-              value: http://product-service:8081
-            - name: IDENTITY_SERVICE_URL
-              value: http://identity-service:8080
-            - name: ORDER_SERVICE_URL
-              value: http://order-service:8083
-            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
-              value: http://eureka-server:8761/eureka/
             - name: SPRING_DATASOURCE_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: mysql-secrets
                   key: MYSQL_PASSWORD
-  #         envFrom:
-  #          - configMapRef:
-  #                name: backend-config
-  #           -secretRef:
-  #                name: mysql-secrets
+            - name: CART_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-config
+                  key: CART_SERVICE_URL
+            - name: IDENTITY_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-config
+                  key: IDENTITY_SERVICE_URL
+            - name: ORDER_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-config
+                  key: ORDER_SERVICE_URL
+            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-config
+                  key: EUREKA_URL
 ---
 apiVersion: v1
 kind: Service

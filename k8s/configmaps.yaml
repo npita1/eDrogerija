@@ -3,31 +3,18 @@ kind: ConfigMap
 metadata:
   name: backend-config
 data:
-  # Eureka Server URL
-  EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
-
-  # Internal Service URLs
-  PRODUCT_SERVICE_URL: http://product-service:8081
-  CART_SERVICE_URL: http://cart-service:8082
-  IDENTITY_SERVICE_URL: http://identity-service:8080
-
-
-  # Konfiguracija za Cart Service bazu
-  SPRING_DATASOURCE_URL_CART: "jdbc:mysql://cart-db:3306/cart_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
-  SPRING_DATASOURCE_USERNAME_CART: "root" 
-  SPRING_DATASOURCE_PASSWORD_CART: "password"
-
-  # Konfiguracija za Identity Service bazu
-  SPRING_DATASOURCE_URL_IDENTITY: "jdbc:mysql://identity-db:3306/identity_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
-  SPRING_DATASOURCE_USERNAME_IDENTITY: "root"
-  SPRING_DATASOURCE_PASSWORD_IDENTITY: "password"
-
-  # Konfiguracija za Order Service bazu
-  SPRING_DATASOURCE_URL_ORDER: "jdbc:mysql://order-db:3306/order_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
-  SPRING_DATASOURCE_USERNAME_ORDER: "root"
-  SPRING_DATASOURCE_PASSWORD_ORDER: "password"
-
-  # Konfiguracija za Product Service bazu
-  SPRING_DATASOURCE_URL_PRODUCT: "jdbc:mysql://product-db:3306/product_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
-  SPRING_DATASOURCE_USERNAME_PRODUCT: "root"
-  SPRING_DATASOURCE_PASSWORD_PRODUCT: "password"
+  # Service URLs
+  EUREKA_URL: "http://eureka-server:8761/eureka/"
+  PRODUCT_SERVICE_URL: "http://product-service:8081"
+  CART_SERVICE_URL: "http://cart-service:8082"
+  IDENTITY_SERVICE_URL: "http://identity-service:8080"
+  ORDER_SERVICE_URL: "http://order-service:8083"
+  
+  # Database connection templates
+  DB_URL_TEMPLATE: "jdbc:mysql://{service}-db:3306/{service}_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+  
+  # Specific DB URLs
+  CART_DB_URL: "jdbc:mysql://cart-db:3306/cart_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+  IDENTITY_DB_URL: "jdbc:mysql://identity-db:3306/identity_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+  ORDER_DB_URL: "jdbc:mysql://order-db:3306/order_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+  PRODUCT_DB_URL: "jdbc:mysql://product-db:3306/product_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
