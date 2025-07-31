@@ -20,14 +20,12 @@ export const AuthProvider = ({ children }) => {
                 return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
             }).join(''));
             const decoded = JSON.parse(jsonPayload);
-            // Važno: Pretpostavljamo da tvoj JWT token sadrži 'id' claim
-            // Ako ne sadrži, morat ćeš prilagoditi backend da ga uključi
             return {
-                id: decoded.id, // DODANO: ID korisnika iz JWT tokena (provjeri da li tvoj token ima 'id' claim)
-                sub: decoded.sub, // Username
-                roles: decoded.roles, // Uloge
-                email: decoded.email, // Email, ako postoji
-                exp: decoded.exp // Expiration time
+                id: decoded.id,
+                sub: decoded.sub,
+                roles: decoded.roles,
+                email: decoded.email,
+                exp: decoded.exp
             };
         } catch (e) {
             console.error("Failed to decode token:", e);
@@ -59,14 +57,14 @@ export const AuthProvider = ({ children }) => {
             const decodedPayload = decodeJwt(receivedToken);
             if (decodedPayload) {
                 setUser({
-                    id: decodedPayload.id, // DODANO: ID korisnika iz JWT tokena
+                    id: decodedPayload.id,
                     username: decodedPayload.sub,
                     roles: decodedPayload.roles || [],
                     email: decodedPayload.email || ''
                 });
                 toast.success("Uspješna prijava!");
             } else {
-                setUser({ username: username, roles: [], email: '' }); // Fallback
+                setUser({ username: username, roles: [], email: '' });
                 toast.warning("Uspješna prijava, ali podaci o korisniku nisu potpuno učitani.");
             }
             
@@ -105,14 +103,14 @@ export const AuthProvider = ({ children }) => {
                 const decodedPayload = decodeJwt(receivedToken);
                 if (decodedPayload) {
                     setUser({
-                        id: decodedPayload.id, // DODANO: ID korisnika iz JWT tokena
+                        id: decodedPayload.id,
                         username: decodedPayload.sub,
                         roles: decodedPayload.roles || [],
                         email: decodedPayload.email || ''
                     });
                     toast.success("Registracija uspješna! Prijavljeni ste.");
                 } else {
-                    setUser({ username, roles: [], email }); // Fallback
+                    setUser({ username, roles: [], email });
                     toast.warning("Registracija uspješna, ali podaci o korisniku nisu potpuno učitani.");
                 }
             } else {
@@ -166,7 +164,7 @@ export const AuthProvider = ({ children }) => {
                     logout();
                 } else {
                     setUser({
-                        id: decodedPayload.id, // DODANO: ID korisnika iz JWT tokena
+                        id: decodedPayload.id,
                         username: decodedPayload.sub,
                         roles: decodedPayload.roles || [],
                         email: decodedPayload.email || ''

@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import { formatPrice } from '../utils/formatPrice';
 
-// Styled Components (ostaju isti kao u tvom kodu)
+
 const CategoryButton = styled.button.withConfig({
     shouldForwardProp: (prop) => !['active'].includes(prop)
 })`

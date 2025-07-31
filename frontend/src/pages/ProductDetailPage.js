@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import styled from 'styled-components';
 import axios from 'axios';
 import { useCart } from '../context/CartContext';
-import { toast } from 'react-toastify'; // I dalje ga treba ako se koristi za druge stvari u komponenti
+import { toast } from 'react-toastify';
 
 const DetailContainer = styled.div`
     background-color: var(--white-color);
@@ -121,7 +121,7 @@ function ProductDetailPage() {
     const [quantity, setQuantity] = useState(1);
     const [error, setError] = useState('');
     const API_GATEWAY_URL = '/api';
-    const { addToCart } = useCart(); // addToCart sada prikazuje toast notifikacije
+    const { addToCart } = useCart();
 
     useEffect(() => {
         setError('');
@@ -149,8 +149,6 @@ function ProductDetailPage() {
 
     const handleAddToCart = async () => {
         if (!product) return;
-        // IZMJENA: Nema više provjere `success` i duplih toast poziva
-        // `addToCart` iz CartContext.js sada upravlja svim toast porukama
         await addToCart(product, quantity); 
     };
 

@@ -2,9 +2,6 @@ import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import styled from 'styled-components';
 
-// Ova stranica bi bila slična HomePage.js, ali bi automatski filtrirala proizvode
-// na osnovu `categoryName` iz URL-a.
-// Za sada je placeholder, kasnije ćemo je integrisati sa HomePage logikom filtera.
 
 const CategoryPageContainer = styled.div`
     background-color: var(--white-color);

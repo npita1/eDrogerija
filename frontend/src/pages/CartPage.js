@@ -1,8 +1,8 @@
-// CartPage.jsx
+
 
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { useCart } from '../context/CartContext'; // Provjerite da li je putanja ispravna
+import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 import AuthModal from '../components/AuthModal';
@@ -13,7 +13,7 @@ import { formatPrice } from '../utils/formatPrice';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-// --- Styled Komponente (bez promjena u odnosu na prethodnu ispravku za slike) ---
+
 
 const CartPageContainer = styled.div`
     padding: 40px;
@@ -275,7 +275,7 @@ const ErrorMessage = styled.p`
     margin-top: 20px;
 `;
 
-// --- Glavna Komponenta: CartPage ---
+
 
 function CartPage() {
     const { user } = useAuth();

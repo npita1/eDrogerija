@@ -4,18 +4,17 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import styled from 'styled-components';
 
-// Import konteksta
+
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 
-// Import komponenti i stranica
-import Header from './components/Header'; // Koristi 'Header' umjesto 'Navbar' ako je to tvoje ime
+
+import Header from './components/Header';
 import HomePage from './pages/HomePage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import CartPage from './pages/CartPage';
-// import AuthModal from './components/modals/AuthModal'; // AuthModal se sada otvara iz CartPage
 import Footer from './components/Footer';
-import OrderList from './pages/OrderList'; // DODANO: Uvezi OrderList komponentu
+import OrderList from './pages/OrderList';
 import ProfilePage from './pages/ProfilePage';
 
 const AppContainer = styled.div`
@@ -40,42 +39,26 @@ const ContentWrapper = styled.main`
 `;
 
 function App() {
-  // Globalni AuthModal state nije potreban ako ga samo CartPage otvara
-  // const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  // const [authModalMode, setAuthModalMode] = useState('login'); 
-
-  // const handleOpenAuthModal = (mode) => {
-  //   setAuthModalMode(mode);
-  //   setIsAuthModalOpen(true);
-  // };
-
-  // const handleCloseAuthModal = () => {
-  //   setIsAuthModalOpen(false);
-  // };
 
   return (
     <Router>
       <AuthProvider>
         <CartProvider>
           <AppContainer>
-            {/* ToastContainer pozicioniran na vrhu za globalnu vidljivost */}
             <ToastContainer position="bottom-right" autoClose={5000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="colored" />
-            <Header /* onOpenAuthModal={handleOpenAuthModal} */ /> {/* Ako Header ima dugme za prijavu, treba mu prop */}
+            <Header /* onOpenAuthModal={handleOpenAuthModal} */ />
             <ContentWrapper>
               <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/products" element={<HomePage />} />
                 <Route path="/products/:id" element={<ProductDetailPage />} />
                 <Route path="/cart" element={<CartPage />} />
-                <Route path="/orders" element={<OrderList />} /> {/* NOVA RUTA za prikaz narudžbi */}
+                <Route path="/orders" element={<OrderList />} />
                 <Route path="/profile" element={<ProfilePage />} />
-                {/* Opcionalno, ruta za pojedinacne detalje narudzbe: <Route path="/orders/:orderNumber" element={<OrderDetail />} /> */}
-                <Route path="*" element={<h2>404 Not Found</h2>} /> {/* Fallback za nepostojeće rute */}
+                <Route path="*" element={<h2>404 Not Found</h2>} />
               </Routes>
             </ContentWrapper>
             <Footer />
-            {/* AuthModal je uklonjen sa App.js nivoa, s obzirom da ga CartPage već kontroliše */}
-            {/* {isAuthModalOpen && <AuthModal onClose={handleCloseAuthModal} initialMode={authModalMode} />} */}
           </AppContainer>
         </CartProvider>
       </AuthProvider>

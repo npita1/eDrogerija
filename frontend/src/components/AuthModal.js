@@ -149,36 +149,28 @@ function AuthModal({ onClose, initialMode = 'login' }) {
         let success;
         try {
             if (isLoginMode) {
-                // AuthContext.js već prikazuje toast poruke (success/error)
+
                 success = await login(username, password); 
-                // Nema potrebe za dodatnim toast.success/error pozivima ovdje
-                // jer ih AuthContext već radi.
-                // Ako želite specifičnu poruku u modalu, možete je postaviti
-                // na osnovu 'success' varijable, ali toast je već prikazan.
-            } else { // Register Mode
+
+            } else {
                 if (!username || !email || !password || !firstName || !lastName || !phoneNumber || !address) {
                     setError('Molimo popunite sva obavezna polja za registraciju.');
                     return;
                 }
-                // AuthContext.js već prikazuje toast poruke (success/error)
+
                 success = await register(username, email, password, firstName, lastName, phoneNumber, address);
-                // Nema potrebe za dodatnim toast.success/error pozivima ovdje.
+
             }
 
             if (success) {
                 onClose();
                 resetFormFields();
             } else {
-                // Ovo je za slučajeve kada login/register vrati false, ali nije bačena iznimka
-                // (npr. ako je AuthContext postavio interni error, ali nije izbacio grešku)
-                // U ovom konkretnom slučaju, AuthContext već šalje toast.error, pa ovdje ne treba ponovno
-                // Možda samo postavljanje error poruke za modal ako je to poželjno
-                // setError(authContextError); // Ako AuthContext izlaže svoj error state
+
             }
 
         } catch (err) {
             console.error('Authentication error:', err.response ? err.response.data : err.message);
-            // Ovo hvata greške koje nisu direktno obrađene u AuthContextu (npr. mrežni problemi)
             setError('Došlo je do greške. Molimo pokušajte ponovo.');
             toast.error('Greška pri komunikaciji sa serverom!');
         }

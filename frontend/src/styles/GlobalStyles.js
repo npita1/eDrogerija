@@ -2,18 +2,15 @@ import { createGlobalStyle } from 'styled-components';
 
 const GlobalStyles = createGlobalStyle`
   :root {
-    // Definisanje palete boja na osnovu logotipa
-    // Molim te, prilagodi ove heksadecimalne vrijednosti nakon što vidiš logo i odlučiš se
-    // Ovo su samo primjeri nježnih tonova
-    --primary-color: #A7BCCB; // Npr. nježno plava
-    --secondary-color: #E2B2B6; // Npr. nježno roza
-    --accent-color: #B5EAD7;   // Npr. nježno zelena
-    --text-color: #333333;     // Tamno siva za tekst
-    --light-text-color: #666666; // Svjetlija siva
-    --background-color: #F8F8F8; // Blaga skoro-bijela pozadina
-    --white-color: #FFFFFF;    // Čista bijela
-    --border-color: #E0E0E0;   // Svijetlo siva za obrube
-    --shadow-color: rgba(0, 0, 0, 0.05); // Blaga sjena
+    --primary-color: #A7BCCB;
+    --secondary-color: #E2B2B6;
+    --accent-color: #B5EAD7;
+    --text-color: #333333;
+    --light-text-color: #666666;
+    --background-color: #F8F8F8;
+    --white-color: #FFFFFF;
+    --border-color: #E0E0E0;
+    --shadow-color: rgba(0, 0, 0, 0.05);
   }
 
   * {
@@ -23,7 +20,7 @@ const GlobalStyles = createGlobalStyle`
   }
 
   body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; // Možeš promijeniti font
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: var(--background-color);
     color: var(--text-color);
     line-height: 1.6;

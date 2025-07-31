@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 
-// Styled Components (ostaju isti kao u tvom kodu)
+
 const ProfileContainer = styled.div`
   background-color: var(--white-color);
   padding: 40px;
@@ -149,9 +149,9 @@ function ProfilePage() {
                     Authorization: `Bearer ${token}`
                 }
             });
-            // Filtriraj narudžbe prije nego što ih postaviš u stanje
+
             const activeOrders = response.data.filter(order => order.status !== 'CANCELLED');
-            setOrders(activeOrders); // Postavljamo samo narudžbe koje nisu otkazane
+            setOrders(activeOrders);
         } catch (error) {
             console.error('Greška pri dohvatu narudžbi:', error);
             toast.error('Greška pri dohvatu vaših narudžbi.');
@@ -179,7 +179,7 @@ function ProfilePage() {
                 }
             });
             toast.success(`Narudžba ${orderNumber} je uspješno otkazana.`);
-            fetchOrders(); // Osvježi listu narudžbi, što će sada automatski filtrirati otkazanu
+            fetchOrders();
         } catch (error) {
             console.error('Greška pri otkazivanju narudžbe:', error);
             if (error.response) {
