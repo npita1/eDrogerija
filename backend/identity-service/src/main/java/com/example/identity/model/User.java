@@ -37,7 +37,7 @@ public class User implements UserDetails {
     private String lastName;
     @Column(unique = true)
     private String phoneNumber;
-    private String address; // <-- OVDJE JE ISPRAVNO: 'address' (sa dva 'd')
+    private String address;
 
     @Enumerated(EnumType.STRING)
     private Role role;

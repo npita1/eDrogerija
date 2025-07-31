@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+data:
+  # Service URLs
+  EUREKA_URL: "http://eureka-server:8761/eureka/"
+  PRODUCT_SERVICE_URL: "http://product-service:8081"
+  CART_SERVICE_URL: "http://cart-service:8082"
+  IDENTITY_SERVICE_URL: "http://identity-service:8080"
+  ORDER_SERVICE_URL: "http://order-service:8083"
+  
+  # Database connection templates
+  DB_URL_TEMPLATE: "jdbc:mysql://{service}-db:3306/{service}_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+  
+  # Specific DB URLs
+  CART_DB_URL: "jdbc:mysql://cart-db:3306/cart_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+  IDENTITY_DB_URL: "jdbc:mysql://identity-db:3306/identity_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+  ORDER_DB_URL: "jdbc:mysql://order-db:3306/order_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+  PRODUCT_DB_URL: "jdbc:mysql://product-db:3306/product_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"

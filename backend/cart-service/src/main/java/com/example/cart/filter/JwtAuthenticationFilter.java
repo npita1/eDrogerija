@@ -36,8 +36,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         final String authHeader = request.getHeader("Authorization");
         final String jwt;
-        final String username; // Username će i dalje biti subject
-        final Long userId; // Novo: userId
+        final String username;
+        final Long userId;
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
@@ -46,21 +46,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         jwt = authHeader.substring(7);
         username = jwtService.extractUsername(jwt);
-        userId = jwtService.extractUserId(jwt); // Ekstraktuj userId
+        userId = jwtService.extractUserId(jwt);
 
         if (username != null && userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             if (jwtService.isTokenValid(jwt)) {
-                // Kreiraj User objekat za Spring Security Principal
                 User principalUser = User.builder()
-                        .username(username) // Username i dalje ostaje "testuser"
-                        // userId se ne čuva direktno u ovom User objektu, ali je dostupan
-                        // kroz SecurityContextHolder ako bi se moralo povući preko username-a iz IdentityService
-                        // ili se direktno koristi u Controlleru
+                        .username(username)
                         .role(com.example.cart.model.Role.valueOf(jwtService.extractAuthorities(jwt).get(0).getAuthority()))
                         .build();
 
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        principalUser, // Principal je naš User objekat
+                        principalUser,
                         null,
                         principalUser.getAuthorities()
                 );

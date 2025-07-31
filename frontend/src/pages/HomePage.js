@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import { formatPrice } from '../utils/formatPrice';
 
-// Styled Components (ostaju isti kao u tvom kodu)
+
 const CategoryButton = styled.button.withConfig({
     shouldForwardProp: (prop) => !['active'].includes(prop)
 })`
@@ -119,7 +119,7 @@ const ALL_CATEGORIES = [
 function HomePage() {
     const [products, setProducts] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState(ALL_CATEGORIES[0].name);
-    const API_GATEWAY_URL = 'http://localhost:8085/api';
+    const API_GATEWAY_URL = '/api';
 
     const { addToCart } = useCart();
     const { user } = useAuth();

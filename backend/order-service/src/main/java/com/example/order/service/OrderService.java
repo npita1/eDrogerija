@@ -204,12 +204,10 @@ public class OrderService {
         Order order = orderRepository.findByOrderNumber(orderNumber)
                 .orElseThrow(() -> new EntityNotFoundException("Narudžba sa brojem " + orderNumber + " nije pronađena."));
 
-        // Provjera da li korisnik pokušava otkazati svoju vlastitu narudžbu
         if (!order.getUserId().equals(userId)) {
             throw new IllegalArgumentException("Nemate ovlasti za otkazivanje ove narudžbe.");
         }
 
-        // Provjera statusa: Narudžba se može otkazati samo ako je PENDING
         if (order.getStatus() != OrderStatus.PENDING) {
             throw new IllegalArgumentException("Narudžba se može otkazati samo ako je u statusu PENDING. Trenutni status: " + order.getStatus());
         }
@@ -217,7 +215,6 @@ public class OrderService {
         log.info("Otkazivanje narudžbe {}. Vraćanje stavki na stanje zaliha.", orderNumber);
         for (OrderItem item : order.getOrderItems()) {
             try {
-                // Poziv Product Service-a da poveća količinu (vrati na zalihe)
                 restTemplate.postForEntity(
                         productServiceUrl + "/api/products/increase-quantity/" + item.getProductId() + "?quantity=" + item.getQuantity(),
                         null,
@@ -234,7 +231,6 @@ public class OrderService {
             }
         }
 
-        // Promjena statusa narudžbe u CANCELED
         order.setStatus(OrderStatus.CANCELLED);
         orderRepository.save(order);
         log.info("Narudžba {} uspješno otkazana i status postavljen na CANCELED.", orderNumber);

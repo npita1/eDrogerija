@@ -30,17 +30,15 @@ public class JwtService {
         return extractClaim(token, Claims::getSubject);
     }
 
-    // NOVO: Metoda za ekstrakciju userId-a iz tokena
     public Long extractUserId(String token) {
         Claims claims = extractAllClaims(token);
-        // Važno: Ključ "userId" mora biti isti kao što je postavljen u IdentityService
         Object userIdObj = claims.get("userId");
-        if (userIdObj instanceof Integer) { // JWT claims često vraćaju brojeve kao Integer ako su mali
+        if (userIdObj instanceof Integer) {
             return ((Integer) userIdObj).longValue();
         } else if (userIdObj instanceof Long) {
             return (Long) userIdObj;
         }
-        return null; // Ili baci izuzetak ako je ID obavezan
+        return null;
     }
 
     public List<GrantedAuthority> extractAuthorities(String token) {

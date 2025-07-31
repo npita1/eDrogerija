@@ -24,13 +24,12 @@ public class CartItem {
     @JoinColumn(name = "cart_id", nullable = false)
     private Cart cart;
 
-    private Long productId; // ID proizvoda iz ProductService-a
-    private String productName; // Može se keširati radi jednostavnosti
-    private String imageUrl; // Može se keširati
-    private BigDecimal price; // Cijena u trenutku dodavanja u košaricu
-    private Integer quantity; // Količina tog proizvoda u košarici
+    private Long productId;
+    private String productName;
+    private String imageUrl;
+    private BigDecimal price;
+    private Integer quantity;
 
-    // Metoda za izračunavanje ukupne cijene stavke
     public BigDecimal getTotalPrice() {
         return price.multiply(BigDecimal.valueOf(quantity));
     }

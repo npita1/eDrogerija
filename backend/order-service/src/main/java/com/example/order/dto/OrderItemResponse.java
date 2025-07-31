@@ -18,5 +18,5 @@ public class OrderItemResponse {
     private String imageUrl;
     private BigDecimal unitPrice;
     private Integer quantity;
-    private BigDecimal totalItemPrice; // Izračunata cijena za ovu stavku
+    private BigDecimal totalItemPrice;
 }

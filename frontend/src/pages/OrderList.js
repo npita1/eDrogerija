@@ -64,7 +64,7 @@ const OrderCard = styled.div`
     .status-CANCELLED { color: #dc3545; }
 `;
 
-const API_GATEWAY_URL = 'http://localhost:8085/api';
+const API_GATEWAY_URL = '/api';
 
 function OrderList() {
     const { user } = useAuth();

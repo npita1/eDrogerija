@@ -26,38 +26,29 @@ import java.util.Collections;
 @RequiredArgsConstructor
 public class ApplicationConfig {
 
-    private final JwtService jwtService; // Nije direktno korišten u interceptoru, ali može biti u drugim dijelovima aplikacije
+    private final JwtService jwtService;
 
     @Bean
     public RestTemplate restTemplate() {
         RestTemplate restTemplate = new RestTemplate();
-        // Dodajemo interceptor koji će automatski dodati JWT token u zaglavlje
+
         restTemplate.setInterceptors(Collections.singletonList(new ClientHttpRequestInterceptor() {
             @Override
             public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution) throws IOException {
-                // Dohvatimo trenutni Authentication objekat iz SecurityContextHolder-a
                 Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-                // Provjerimo da li postoji autentifikacija i da li su credentials JWT token
-                // (što smo postavili u JwtAuthenticationFilter-u)
                 if (authentication != null && authentication.getCredentials() instanceof String) {
                     String jwt = (String) authentication.getCredentials();
-                    // Dodajemo Authorization zaglavlje sa Bearer tokenom
                     request.getHeaders().set(HttpHeaders.AUTHORIZATION, "Bearer " + jwt);
                 }
-                // Nastavljamo izvršenje zahtjeva
                 return execution.execute(request, body);
             }
         }));
         return restTemplate;
     }
 
-    // Spring Security konfiguracija (standardna)
     @Bean
     public UserDetailsService userDetailsService() {
-        // U order-service, UserDetailsService obično ne dohvaća korisnike iz baze podataka
-        // jer je to zadatak Identity Service-a. JWT filter se brine o postavljanju UserDetails.
-        // Ova implementacija je samo placeholder da bi Spring Security mogao inicijalizirati DaoAuthenticationProvider.
         return username -> {
             throw new UsernameNotFoundException("User not found via UserDetailsService in Order Service. Authentication is handled by JWT filter.");
         };

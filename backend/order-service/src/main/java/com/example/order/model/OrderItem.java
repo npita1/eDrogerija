@@ -22,24 +22,23 @@ public class OrderItem {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = false)
-    private Order order; // Veza na Order entitet
+    private Order order;
 
     @Column(nullable = false)
-    private Long productId; // ID proizvoda iz ProductService-a
+    private Long productId;
 
     @Column(nullable = false)
-    private String productName; // Ime proizvoda (kopirano iz ProductService-a)
+    private String productName;
 
     @Column(nullable = true)
-    private String imageUrl; // Slika proizvoda (kopirano)
+    private String imageUrl;
 
     @Column(nullable = false)
-    private BigDecimal unitPrice; // Cijena po jedinici u trenutku narudžbe
+    private BigDecimal unitPrice;
 
     @Column(nullable = false)
-    private Integer quantity; // Količina naručenog proizvoda
+    private Integer quantity;
 
-    // Izračunata ukupna cijena za ovu stavku narudžbe
     public BigDecimal getTotalItemPrice() {
         if (unitPrice == null || quantity == null) {
             return BigDecimal.ZERO;

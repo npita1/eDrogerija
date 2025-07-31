@@ -2,10 +2,10 @@ package com.example.cart.controller;
 
 import com.example.cart.dto.AddToCartRequest;
 import com.example.cart.dto.CartResponse;
-import com.example.cart.jwt.JwtService; // Dodaj import za JwtService
+import com.example.cart.jwt.JwtService;
 import com.example.cart.model.User;
 import com.example.cart.service.CartService;
-import jakarta.servlet.http.HttpServletRequest; // Dodaj import
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +19,7 @@ import jakarta.validation.Valid;
 public class CartController {
 
     private final CartService cartService;
-    private final JwtService jwtService; // Injektuj JwtService
+    private final JwtService jwtService;
 
     // Pomoćna metoda za dohvaćanje JWT tokena iz requesta
     private String extractJwtFromRequest(HttpServletRequest request) {
@@ -35,12 +35,11 @@ public class CartController {
     public ResponseEntity<CartResponse> getCart(@AuthenticationPrincipal User user, HttpServletRequest request) {
         String jwt = extractJwtFromRequest(request);
         if (jwt == null) {
-            // Ovo se ne bi trebalo desiti s obzirom na SecurityConfig, ali za sigurnost
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         Long userId = jwtService.extractUserId(jwt);
         if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // UserId nije u tokenu
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         CartResponse cart = cartService.getOrCreateCart(userId);
         return ResponseEntity.ok(cart);
@@ -50,7 +49,7 @@ public class CartController {
     @PostMapping("/add")
     public ResponseEntity<CartResponse> addProductToCart(@AuthenticationPrincipal User user,
                                                          @Valid @RequestBody AddToCartRequest request,
-                                                         HttpServletRequest httpRequest) { // Promijenjen naziv parametra da ne bude kolizija
+                                                         HttpServletRequest httpRequest) {
         String jwt = extractJwtFromRequest(httpRequest);
         if (jwt == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();

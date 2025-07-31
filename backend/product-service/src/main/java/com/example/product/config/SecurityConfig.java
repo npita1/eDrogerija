@@ -2,22 +2,18 @@ package com.example.product.config;
 
 import com.example.product.filter.JwtAuthenticationFilter;
 import com.example.product.jwt.JwtService;
-import com.example.product.model.Role; // Osiguraj da je Role importan
-//import com.example.product.model.User; // UserDetails nije potreban u SecurityConfig
+import com.example.product.model.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-// import org.springframework.security.authentication.UsernamePasswordAuthenticationToken; // Nije potreban ovdje
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-// import org.springframework.security.core.context.SecurityContextHolder; // Nije potreban ovdje
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.http.HttpMethod; // Dodaj ovaj import
+import org.springframework.http.HttpMethod;
 
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -25,7 +21,7 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
-    private final JwtService jwtService; // Održavamo ga ovdje, iako se ne koristi direktno u filter lancu, može za debug
+    private final JwtService jwtService;
 
     private static final String[] SWAGGER_WHITELIST = {
             "/swagger-ui/**",

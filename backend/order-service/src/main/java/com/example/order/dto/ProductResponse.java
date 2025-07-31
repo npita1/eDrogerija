@@ -16,8 +16,8 @@ public class ProductResponse {
     private String name;
     private String description;
     private BigDecimal price;
-    private Integer quantity; // Količina u inventaru
+    private Integer quantity;
     private String imageUrl;
-    private String brand; // Brand je String
+    private String brand;
     private String category;
 }

@@ -51,13 +51,12 @@ public class JwtService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    // Ažurirana metoda za generisanje tokena
+
     public String generateToken(User user) {
         Map<String, Object> extraClaims = new HashMap<>();
         extraClaims.put("userId", user.getId());
         extraClaims.put("role", user.getRole().name());
 
-        // *** DODANO OVDJE: Dodaj email kao claim u token ***
         extraClaims.put("email", user.getEmail());
 
         return Jwts
@@ -70,10 +69,8 @@ public class JwtService {
                 .compact();
     }
 
-    // Metoda koja prima User i extraClaims mapu (ako je koristiš negdje drugdje)
     public String generateToken(User user, Map<String, Object> extraClaims) {
-        // Pobrini se da se email doda i ovdje ako se ova metoda poziva direktno
-        if (!extraClaims.containsKey("email")) { // Dodaj samo ako već nije prisutan
+        if (!extraClaims.containsKey("email")) {
             extraClaims.put("email", user.getEmail());
         }
         if (!extraClaims.containsKey("userId")) {

@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { FaTimes } from 'react-icons/fa';
-import { formatPrice } from '../../utils/formatPrice'; // Koristi našu util funkciju za formatiranje cijene
+import { formatPrice } from '../../utils/formatPrice';
 
 const ModalOverlay = styled.div`
     position: fixed;
