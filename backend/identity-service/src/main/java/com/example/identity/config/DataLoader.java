@@ -22,12 +22,11 @@ public class DataLoader implements CommandLineRunner {
     public void run(String... args) throws Exception {
         log.info("Checking for initial user data...");
 
-        // Provjeri da li admin korisnik već postoji
         if (userRepository.findByUsername("admin").isEmpty()) {
             log.info("Admin user not found. Creating admin user...");
             User admin = User.builder()
                     .username("admin")
-                    .password(passwordEncoder.encode("adminpass")) // Lozinka za admina
+                    .password(passwordEncoder.encode("adminpass"))
                     .email("admin@example.com")
                     .firstName("Admin")
                     .lastName("User")
@@ -41,7 +40,6 @@ public class DataLoader implements CommandLineRunner {
             log.info("Admin user already exists.");
         }
 
-        // Provjeri da li obični korisnik "user1" već postoji
         if (userRepository.findByUsername("user1").isEmpty()) {
             log.info("User 'user1' not found. Creating 'user1'...");
             User user1 = User.builder()
@@ -60,24 +58,5 @@ public class DataLoader implements CommandLineRunner {
             log.info("User 'user1' already exists.");
         }
 
-        // Možeš dodati još korisnika po potrebi
-        // if (userRepository.findByUsername("user2").isEmpty()) {
-        //     log.info("User 'user2' not found. Creating 'user2'...");
-        //     User user2 = User.builder()
-        //             .username("user2")
-        //             .password(passwordEncoder.encode("user2pass"))
-        //             .email("user2@example.com")
-        //             .firstName("Another")
-        //             .lastName("User2")
-        //             .phoneNumber("063456789")
-        //             .address("User2 St. 20")
-        //             .role(Role.USER)
-        //             .createdAt(LocalDateTime.now())
-        //             .build();
-        //     userRepository.save(user2);
-        //     log.info("User 'user2' created.");
-        // } else {
-        //     log.info("User 'user2' already exists.");
-        // }
     }
 }

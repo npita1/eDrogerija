@@ -17,7 +17,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-@Component // Označava da je ovo Spring komponenta
+@Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -30,7 +30,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
-        // Preskoči opcije zahtjeve (preflight requests)
         if (request.getHeader("Access-Control-Request-Method") != null && "OPTIONS".equals(request.getMethod())) {
             filterChain.doFilter(request, response);
             return;
@@ -40,17 +39,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String jwt;
         final String username;
 
-        // Provjeri da li postoji "Authorization" header i počinje li sa "Bearer "
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response); // Nastavi sa filter lancem
+            filterChain.doFilter(request, response);
             return;
         }
 
-        // Ekstraktuj JWT token (preskoči "Bearer " prefiks)
         jwt = authHeader.substring(7);
-        username = jwtService.extractUsername(jwt); // Ekstraktuj username iz JWT-a
+        username = jwtService.extractUsername(jwt);
 
-        // Ako je username prisutan i korisnik nije već autentificiran
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
 
@@ -58,16 +54,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (jwtService.isTokenValid(jwt, userDetails)) {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userDetails,
-                        null, // Lozinka nije potrebna nakon autentifikacije tokenom
+                        null,
                         userDetails.getAuthorities()
                 );
                 authToken.setDetails(
                         new WebAuthenticationDetailsSource().buildDetails(request)
                 );
-                // Postavi Authentication objekat u SecurityContextHolder
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         }
-        filterChain.doFilter(request, response); // Nastavi sa filter lancem
+        filterChain.doFilter(request, response);
     }
 }

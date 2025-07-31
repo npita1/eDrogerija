@@ -44,14 +44,11 @@ public class JwtService {
             Map<String, Object> extraClaims,
             UserDetails userDetails
     ) {
-        // userId i role su KLJUČNI CUSTOM CLAIMOVI
         if (userDetails instanceof com.example.order.model.User) {
             com.example.order.model.User user = (com.example.order.model.User) userDetails;
             extraClaims.put("userId", user.getId());
-            extraClaims.put("role", user.getRole().name()); // Assuming Role is an enum or string
+            extraClaims.put("role", user.getRole().name());
         } else {
-            // Fallback ako userDetails nije naš User tip
-            // Oprez: Bez userId i role, autorizacija možda neće raditi ispravno
             System.err.println("UserDetails is not of type com.example.order.model.User. Custom claims userId and role will not be added.");
         }
 

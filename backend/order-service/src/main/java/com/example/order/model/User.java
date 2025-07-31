@@ -19,11 +19,11 @@ import java.util.List;
 @AllArgsConstructor
 public class User implements UserDetails {
 
-    private Long id; // KLJUČNO: ID korisnika
+    private Long id;
     private String username;
-    private String password; // Neće se koristiti za autentifikaciju ovdje
+    private String password;
     @Enumerated(EnumType.STRING)
-    private Role role; // Treba definirati Role enum
+    private Role role;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -37,7 +37,7 @@ public class User implements UserDetails {
 
     @Override
     public String getPassword() {
-        return password; // Neće se koristiti, ali mora se implementirati
+        return password;
     }
 
     @Override

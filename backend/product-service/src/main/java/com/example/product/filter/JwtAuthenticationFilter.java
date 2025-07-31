@@ -1,7 +1,7 @@
-package com.example.product.filter; // Pazi na paket!
+package com.example.product.filter;
 
 import com.example.product.jwt.JwtService;
-import com.example.product.model.User; // Koristi tvoj User model iz ProductService
+import com.example.product.model.User;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -37,7 +37,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String authHeader = request.getHeader("Authorization");
         final String jwt;
         final String username;
-        final Long userId; // Novo: userId
+        final Long userId;
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
@@ -46,12 +46,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         jwt = authHeader.substring(7);
         username = jwtService.extractUsername(jwt);
-        userId = jwtService.extractUserId(jwt); // Ekstraktuj userId
+        userId = jwtService.extractUserId(jwt);
 
-        // Provjeri da username i userId nisu null i da korisnik nije već autentificiran
         if (username != null && userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             if (jwtService.isTokenValid(jwt)) {
-                // Kreiraj minimalni User objekat za Spring Security Principal
                 User principalUser = User.builder()
                         .username(username)
                         .role(com.example.product.model.Role.valueOf(jwtService.extractAuthorities(jwt).get(0).getAuthority()))

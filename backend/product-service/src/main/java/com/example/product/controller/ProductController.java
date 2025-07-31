@@ -1,6 +1,6 @@
 package com.example.product.controller;
 
-import com.example.product.dto.ProductRequest; // DODANO
+import com.example.product.dto.ProductRequest;
 import com.example.product.dto.ProductResponse;
 import com.example.product.service.ProductService;
 import jakarta.validation.Valid;
@@ -19,7 +19,6 @@ public class ProductController {
 
     private final ProductService productService;
 
-    // Stvori novi proizvod (samo ADMIN) - SADA PRIMA PRODUCTREQUEST
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAuthority('ADMIN')")
@@ -27,7 +26,6 @@ public class ProductController {
         return productService.createProduct(productRequest);
     }
 
-    // Dohvati sve proizvode (USER i ADMIN)
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
@@ -35,7 +33,7 @@ public class ProductController {
         return productService.getAllProducts();
     }
 
-    // Dohvati proizvod po ID-u (USER i ADMIN)
+
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
@@ -43,7 +41,7 @@ public class ProductController {
         return productService.getProductById(id);
     }
 
-    // Ažuriraj proizvod (samo ADMIN) - SADA PRIMA PRODUCTREQUEST
+
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("hasAuthority('ADMIN')")
@@ -51,7 +49,6 @@ public class ProductController {
         return productService.updateProduct(id, productRequest);
     }
 
-    // Obriši proizvod (samo ADMIN)
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('ADMIN')")
@@ -59,7 +56,7 @@ public class ProductController {
         productService.deleteProduct(id);
     }
 
-    // ENDPOINTI ZA INTER-SERVICE KOMUNIKACIJU
+
     @PostMapping("/decrease-quantity/{productId}")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<Void> decreaseProductQuantity(@PathVariable Long productId, @RequestParam Integer quantity) {

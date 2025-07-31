@@ -7,10 +7,9 @@ import com.example.cart.model.Cart;
 import com.example.cart.model.CartItem;
 import com.example.cart.repository.CartItemRepository;
 import com.example.cart.repository.CartRepository;
-import lombok.AllArgsConstructor; // Dodaj ako nije već tu
-import lombok.Builder; // Dodaj ako nije već tu
-import lombok.Data; // Dodaj ako nije već tu
-import lombok.NoArgsConstructor; // Dodaj ako nije već tu
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -20,7 +19,6 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime; // Dodaj ako nije već tu
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -64,7 +62,6 @@ public class CartService {
         if (product.getQuantity() < request.getQuantity()) {
             throw new IllegalArgumentException("Insufficient stock for product " + product.getName() + ". Available: " + product.getQuantity());
         }
-        // --- KRAJ PROVJERE INVENTARA ---
 
         Optional<CartItem> existingCartItem = cartItemRepository.findByCartIdAndProductId(cart.getId(), request.getProductId());
 
@@ -77,7 +74,6 @@ public class CartService {
             if (product.getQuantity() < newTotalQuantity) {
                 throw new IllegalArgumentException("Cannot add more. Insufficient stock for product " + product.getName() + ". Available: " + product.getQuantity() + ", Total in cart would be: " + newTotalQuantity);
             }
-            // --- KRAJ DODATNE PROVJERE INVENTARA ---
 
             item.setQuantity(newTotalQuantity);
             cartItemRepository.save(item);
@@ -91,12 +87,11 @@ public class CartService {
                     .price(product.getPrice())
                     .quantity(request.getQuantity())
                     .build();
-            cart.addItem(newCartItem); // Dodaj stavku u košaricu (setuje se cart u itemu)
-            cartRepository.save(cart); // Sačuvaj košaricu (ovo će kaskadirati na CartItem)
+            cart.addItem(newCartItem);
+            cartRepository.save(cart);
         }
 
-        // Vrati ažuriranu košaricu
-        return mapToCartResponse(cartRepository.findById(cart.getId()).orElseThrow()); // Dohvati svježu košaricu iz DB
+        return mapToCartResponse(cartRepository.findById(cart.getId()).orElseThrow());
     }
 
     // Metoda za ažuriranje količine proizvoda u košarici
@@ -123,7 +118,6 @@ public class CartService {
             if (product.getQuantity() < newQuantity) {
                 throw new IllegalArgumentException("Cannot update quantity. Insufficient stock for product " + product.getName() + ". Available: " + product.getQuantity());
             }
-            // --- KRAJ PROVJERE INVENTARA ---
             cartItem.setQuantity(newQuantity);
             cartItemRepository.save(cartItem);
         }
@@ -140,8 +134,8 @@ public class CartService {
         CartItem cartItem = cartItemRepository.findByCartIdAndProductId(cart.getId(), productId)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found in cart."));
 
-        cart.removeItem(cartItem); // Ukloni iz kolekcije
-        cartItemRepository.delete(cartItem); // Obriši iz baze
+        cart.removeItem(cartItem);
+        cartItemRepository.delete(cartItem);
     }
 
     // Metoda za brisanje cijele košarice
@@ -201,9 +195,9 @@ public class CartService {
         private String name;
         private String description;
         private BigDecimal price;
-        private Integer quantity; // Količina u inventaru
+        private Integer quantity;
         private String imageUrl;
         private String brand;
-        private String category; // Kao String
+        private String category;
     }
 }

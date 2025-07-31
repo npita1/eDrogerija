@@ -16,5 +16,5 @@ public class CartResponse {
     private Long id;
     private Long userId;
     private List<CartItemResponse> items;
-    private BigDecimal totalCartPrice; // Ukupna cijena svih stavki u košarici
+    private BigDecimal totalCartPrice;
 }

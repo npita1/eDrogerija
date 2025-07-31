@@ -8,6 +8,5 @@ import java.util.Optional;
 
 @Repository
 public interface CartRepository extends JpaRepository<Cart, Long> {
-    // ISPRAVNO: Metoda prima Long userId, kao što je definirano u Cart modelu
     Optional<Cart> findByUserId(Long userId);
 }

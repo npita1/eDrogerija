@@ -38,7 +38,6 @@ public class Order {
     @CreationTimestamp
     private LocalDateTime orderDate;
 
-    // Podaci za dostavu (izvučeni iz UserDetailResponse)
     private String shippingFirstName;
     private String shippingLastName;
     private String shippingAddressStreet;

@@ -1,7 +1,6 @@
-package com.example.cart.config; // Pazi na paket!
+package com.example.cart.config;
 
 import com.example.cart.filter.JwtAuthenticationFilter;
-// import com.example.cart.jwt.JwtService; // Ne koristi se direktno ovdje
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,7 +10,6 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.http.HttpMethod; // Dodaj ovaj import
 
 @Configuration
 @EnableWebSecurity
@@ -19,7 +17,7 @@ import org.springframework.http.HttpMethod; // Dodaj ovaj import
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
-    // private final JwtService jwtService; // Nema potrebe za JwtService ovdje
+
 
     private static final String[] SWAGGER_WHITELIST = {
             "/swagger-ui/**",

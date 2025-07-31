@@ -1,4 +1,4 @@
-package com.example.identity; // Primjer za identity-service
+package com.example.identity;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

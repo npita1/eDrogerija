@@ -1,8 +1,8 @@
 package com.example.identity.service;
 
 import com.example.identity.dto.UserDetailResponse;
-import com.example.identity.model.User; // Tvoja entitet klasa
-import com.example.identity.repository.UserRepository; // Tvoj UserRepository
+import com.example.identity.model.User;
+import com.example.identity.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

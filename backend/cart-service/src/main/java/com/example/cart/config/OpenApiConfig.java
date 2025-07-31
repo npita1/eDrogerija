@@ -1,4 +1,4 @@
-package com.example.cart.config; // Promijeni paket!
+package com.example.cart.config;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
@@ -18,8 +18,8 @@ import org.springframework.context.annotation.Configuration;
                         email = "contact@yourcompany.com",
                         url = "https://yourcompany.com"
                 ),
-                description = "OpenApi documentation for Cart Service", // PROMIJENJENO
-                title = "Cart Service API", // PROMIJENJENO
+                description = "OpenApi documentation for Cart Service",
+                title = "Cart Service API",
                 version = "1.0",
                 license = @License(
                         name = "Licence name",

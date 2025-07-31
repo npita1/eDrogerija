@@ -11,8 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import jakarta.persistence.EntityNotFoundException;
-import com.example.identity.model.User; // Pretpostavljam da je ovo tvoja User klasa koja implementira UserDetails
+import com.example.identity.model.User;
 
 @RestController
 @RequestMapping("/api/users")
@@ -22,16 +21,13 @@ public class IdentityController {
     private final UserService userService;
 
     @GetMapping("/{userId}/details")
-    // @PreAuthorize osigurava da samo ADMIN ili korisnik čiji se ID podudara može pristupiti
     @PreAuthorize("hasRole('ADMIN') or (#userId != null and #userId == ((T(com.example.identity.model.User)authentication.principal).id))")
     public ResponseEntity<UserDetailResponse> getUserDetails(@PathVariable Long userId,
-                                                             @AuthenticationPrincipal User userPrincipal) { // Koristim 'userPrincipal' za jasnoću
-        // Dodatna provjera za sigurnost i tip-sigurnost (iako @PreAuthorize već radi većinu)
+                                                             @AuthenticationPrincipal User userPrincipal) {
         if (userPrincipal == null || userPrincipal.getId() == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        // Ako korisnik nije ADMIN i traži detalje drugog korisnika, vrati 403 Forbidden
         if (!userPrincipal.getRole().name().equals("ADMIN") && !userPrincipal.getId().equals(userId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
@@ -40,6 +36,4 @@ public class IdentityController {
         return ResponseEntity.ok(userDetails);
     }
 
-    // Ovdje možete dodati i druge CRUD operacije za korisnike (npr. ažuriranje, brisanje)
-    // ali pazite na autorizaciju (npr. samo ADMIN ili korisnik sam za sebe)
 }

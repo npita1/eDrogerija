@@ -2,9 +2,9 @@ package com.example.order.controller;
 
 import com.example.order.dto.OrderResponse;
 import com.example.order.model.OrderStatus;
-import com.example.order.model.User; // Pretpostavljam da je User vaša implementacija UserDetails
+import com.example.order.model.User;
 import com.example.order.service.OrderService;
-import jakarta.persistence.EntityNotFoundException; // Dodaj import
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
